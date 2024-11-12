@@ -12,8 +12,8 @@ typedef struct Input
 {
     SDL_bool key[SDL_NUM_SCANCODES];
     SDL_bool quit;
-    SDL_Keycode key_up, key_down, key_left, key_right, key_space, key_return, key_D, key_H;  /* /;8;7;9;Space;Return;D;H */
-    SDL_bool up, down, left, right, space, returnk, D, H;
+    SDL_Keycode key_up, key_down, key_left, key_right, key_Validate, key_Summit, key_Delete, key_Help;  /* /;8;7;9;Space;Return;D;H */
+    SDL_bool up, down, left, right, Validate, Summit, Delete, Help;
 }Input;
 
 typedef struct Point
@@ -55,14 +55,26 @@ void updateEvent(Input *input)
         else if(event.type == SDL_KEYUP)
             input->key[event.key.keysym.scancode] = SDL_FALSE;
     }
-    input->space = input->key[SDL_GetScancodeFromKey(input->key_space)];
-    input->returnk = input->key[SDL_GetScancodeFromKey(input->key_return)];
-    input->D = input->key[SDL_GetScancodeFromKey(input->key_D)];
-    input->H = input->key[SDL_GetScancodeFromKey(input->key_H)];
+    input->Validate = input->key[SDL_GetScancodeFromKey(input->key_Validate)];
+    input->Summit = input->key[SDL_GetScancodeFromKey(input->key_Summit)];
+    input->Delete = input->key[SDL_GetScancodeFromKey(input->key_Delete)];
+    input->Help = input->key[SDL_GetScancodeFromKey(input->key_Help)];
     input->down = input->key[SDL_GetScancodeFromKey(input->key_down)];
     input->left = input->key[SDL_GetScancodeFromKey(input->key_left)];
     input->right = input->key[SDL_GetScancodeFromKey(input->key_right)];
     input->up = input->key[SDL_GetScancodeFromKey(input->key_up)];
+}
+
+void loadKeys(Everything *all)
+{
+    all->input.key_Validate = SDLK_SPACE;
+    all->input.key_Summit = SDLK_RETURN;
+    all->input.key_Delete = SDLK_d;
+    all->input.key_Help = SDLK_h;
+    all->input.key_down = SDLK_KP_8;
+    all->input.key_left = SDLK_KP_7;
+    all->input.key_right = SDLK_KP_9;
+    all->input.key_up = SDLK_KP_DIVIDE;
 }
 
 void destroy_Point(Point *point, Everything *all)
@@ -146,9 +158,9 @@ void Quit(Everything *all, int status)
 void add_Point(Everything *all)
 {
     Point *liste = all->list_points;
-    if (all->input.space)
+    if (all->input.Validate)
     {
-        all->input.space = SDL_FALSE;
+        all->input.Validate = SDL_FALSE;
         while (liste->suivant != NULL)
         {
             liste = liste->suivant;
@@ -169,9 +181,9 @@ void add_Point(Everything *all)
 void del_Point(Everything *all)
 {
     Point *liste = all->list_points->suivant;
-    if (all->input.D)
+    if (all->input.Delete)
     {
-        all->input.D = SDL_FALSE;
+        all->input.Delete = SDL_FALSE;
         if (liste == NULL)
                 return;
         while (liste->point.x != all->cursor.x || liste->point.y != all->cursor.y)
@@ -282,18 +294,6 @@ void Init(Everything *all)
     SDL_FreeSurface(icone);
 }
 
-void loadKeys(Everything *all)
-{
-    all->input.key_space = SDLK_SPACE;
-    all->input.key_return = SDLK_RETURN;
-    all->input.key_D = SDLK_d;
-    all->input.key_H = SDLK_h;
-    all->input.key_down = SDLK_KP_8;
-    all->input.key_left = SDLK_KP_7;
-    all->input.key_right = SDLK_KP_9;
-    all->input.key_up = SDLK_KP_DIVIDE;
-}
-
 void init_Game_object(Everything *all)
 {
     all->game_object = malloc(sizeof(Game_object));
@@ -348,9 +348,9 @@ void updateMode(Everything *all)
     {   
         case 0 :        /* obtention des données de base */
         {
-            if (all->input.returnk)
+            if (all->input.Summit)
             {
-                all->input.returnk = SDL_FALSE;
+                all->input.Summit = SDL_FALSE;
                 if (fill_Game_object(all))
                 {
                     all->mode = 1;
@@ -359,27 +359,27 @@ void updateMode(Everything *all)
         }
         case 1 :        /* écran d'aide */
         {
-            if (all->input.H)
+            if (all->input.Help)
             {
-                all->input.H = SDL_FALSE;
+                all->input.Help = SDL_FALSE;
                 all->mode = 2;
             }
             break;
         }
         case 2 :        /* choix de l'animation */
         {
-            if (all->input.H)
+            if (all->input.Help)
             {
-                all->input.H = SDL_FALSE;
+                all->input.Help = SDL_FALSE;
                 all->mode = 1;
             }
             break;
         }
         case 3 :        /* choix de l'animation avec affichage de la hitbox */
         {
-            if (all->input.H)
+            if (all->input.Help)
             {
-                all->input.H = SDL_FALSE;
+                all->input.Help = SDL_FALSE;
                 all->mode = 1;
             }
             break;
