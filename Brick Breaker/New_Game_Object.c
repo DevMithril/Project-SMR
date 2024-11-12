@@ -35,7 +35,7 @@ typedef struct Everything
     Point *list_points;
     Cursor cursor;
     char texture_file[GAME_OBJECT_LEN_TEXTURE_FILE];
-    int mode;
+    int mode, current_row;
     Input input;
     SDL_Renderer *renderer;
     SDL_Window *window;
@@ -188,10 +188,6 @@ void build_Hitbox(Everything *all)
 {
     Point *point = all->list_points;
     int nb_points = 0, x_min = 0, x_max = 0, y_min = 0, y_max = 0;
-    while (hitbox->suivant != NULL)
-    {
-        hitbox = hitbox->suivant;
-    }
     while (point->suivant != NULL)
     {
         nb_points += 1;
@@ -199,21 +195,25 @@ void build_Hitbox(Everything *all)
     }
     if (3 > nb_points)
     {
-        point = liste->liste_point;
+        point = all->list_points;
         while (point->suivant != NULL)
-            destroy_Point(point->suivant, liste);
+            destroy_Point(point->suivant, all);
         return;
     }
-    point = liste->liste_point->suivant;
+    point = all->list_points->suivant;
     Hitbox *new_hitbox = malloc(sizeof(Hitbox));
-    hitbox->suivant = new_hitbox;
-    SDL_Point new_point[nb_points];
-    new_hitbox->points = malloc(sizeof(new_point));
+    if (new_hitbox == NULL)
+    {
+        fprintf(stderr, "Erreur dans build_Hitbox : Out of Memory\n");
+        Quit(all, EXIT_FAILURE);
+    }
+    all->game_object->hitboxes[all->current_row] = new_hitbox;
+    new_hitbox->points = malloc(nb_points * sizeof(SDL_Point));
     new_hitbox->nb_points = nb_points;
-    new_hitbox->suivant = NULL;
     if (new_hitbox->points == NULL)
     {
-        Quit(liste, EXIT_FAILURE);
+        fprintf(stderr, "Erreur dans build_Hitbox : Out of Memory\n");
+        Quit(all, EXIT_FAILURE);
     }
     Point *tmp = NULL;
     for (int i = 0; i < new_hitbox->nb_points; i++)
@@ -230,43 +230,11 @@ void build_Hitbox(Everything *all)
             y_max = point->point.y;
         tmp = point;
         point = point->suivant;
-        destroy_Point(tmp, liste);
+        destroy_Point(tmp, all);
     }
     new_hitbox->cercle_x = x_min + (x_max - x_min) / 2;
     new_hitbox->cercle_y = y_min + (y_max - y_min) / 2;
     new_hitbox->cercle_rayon = (int)sqrt((double)((x_max-x_min) * (x_max-x_min) + (y_max-y_min) * (y_max-y_min))) / 2;
-    new_hitbox->opp_sides_parallels = SDL_TRUE;
-    int i = 0;
-    if (new_hitbox->nb_points % 2 == 0)
-    {
-        for (i = 0; i < new_hitbox->nb_points / 2 - 1; i++)
-        {
-            if (new_hitbox->points[i].x - new_hitbox->points[i+1].x != new_hitbox->points[i + new_hitbox->nb_points / 2 + 1].x - new_hitbox->points[i + new_hitbox->nb_points / 2].x)
-            {
-                new_hitbox->opp_sides_parallels = SDL_FALSE;
-                return;
-            }
-            if (new_hitbox->points[i].y - new_hitbox->points[i+1].y != new_hitbox->points[i + new_hitbox->nb_points / 2 + 1].y - new_hitbox->points[i + new_hitbox->nb_points / 2].y)
-            {
-                new_hitbox->opp_sides_parallels = SDL_FALSE;
-                return;
-            }
-        }
-        if (new_hitbox->points[i+1].x - new_hitbox->points[i+2].x != new_hitbox->points[0].x - new_hitbox->points[i + new_hitbox->nb_points / 2 + 1].x)
-        {
-            new_hitbox->opp_sides_parallels = SDL_FALSE;
-            return;
-        }
-        if (new_hitbox->points[i+1].y - new_hitbox->points[i+2].y != new_hitbox->points[0].y - new_hitbox->points[i + new_hitbox->nb_points / 2 + 1].y)
-        {
-            new_hitbox->opp_sides_parallels = SDL_FALSE;
-            return;
-        }
-    }
-    else
-    {
-        new_hitbox->opp_sides_parallels = SDL_FALSE;
-    }
 }
 
 void Init(Everything *all)
