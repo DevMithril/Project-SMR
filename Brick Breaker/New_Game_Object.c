@@ -348,13 +348,33 @@ void choose_animation(Everything *all)
 {
     if (all->input.up)
     {
-        all->input.up = SDL_FALSE;
-        chg_animation_Game_object(all->current_row - 1, all->game_object);
+        if (all->current_row == 0)
+        {
+            all->input.up = SDL_FALSE;
+            chg_animation_Game_object(all->game_object->nb_row - 1, all->game_object);
+            all->current_row = all->game_object->nb_row - 1;
+        }
+        else
+        {
+            all->input.up = SDL_FALSE;
+            chg_animation_Game_object(all->current_row - 1, all->game_object);
+            all->current_row -= 1;
+        }
     }
     if (all->input.down)
     {
-        all->input.down = SDL_FALSE;
-        chg_animation_Game_object(all->current_row + 1, all->game_object);
+        if (all->current_row == all->game_object->nb_row - 1)
+        {
+            all->input.down = SDL_FALSE;
+            chg_animation_Game_object(0, all->game_object);
+            all->current_row = 0;
+        }
+        else
+        {
+            all->input.down = SDL_FALSE;
+            chg_animation_Game_object(all->current_row + 1, all->game_object);
+            all->current_row += 1;
+        }
     }
 }
 
@@ -430,12 +450,14 @@ void runGame(Everything *all)
         }
         case 2 :        /* choix de l'animation */
         {
+            choose_animation(all);
             animate_Game_object(all->game_object);
             display_Game_object(all->game_object, all->renderer);
             break;
         }
         case 3 :        /* choix de l'animation avec affichage de la hitbox */
         {
+            choose_animation(all);
             animate_Game_object(all->game_object);
             display_Game_object(all->game_object, all->renderer);
             if (all->game_object->current_hitbox != NULL)
