@@ -212,6 +212,7 @@ void build_Hitbox(Everything *all)
             destroy_Point(point->suivant, all);
         return;
     }
+    destroy_Hitbox(&all->game_object->current_hitbox);
     point = all->list_points->suivant;
     Hitbox *new_hitbox = malloc(sizeof(Hitbox));
     if (new_hitbox == NULL)
@@ -220,6 +221,7 @@ void build_Hitbox(Everything *all)
         Quit(all, EXIT_FAILURE);
     }
     all->game_object->hitboxes[all->current_row] = new_hitbox;
+    all->game_object->current_hitbox = new_hitbox;
     new_hitbox->points = malloc(nb_points * sizeof(SDL_Point));
     new_hitbox->nb_points = nb_points;
     if (new_hitbox->points == NULL)
@@ -342,13 +344,29 @@ SDL_bool fill_Game_object(Everything *all)
     return SDL_TRUE;
 }
 
-void switch_mode(SDL_bool *input, int mode, Everything *all)
+void choose_animation(Everything *all)
+{
+    if (all->input.up)
+    {
+        all->input.up = SDL_FALSE;
+        chg_animation_Game_object(all->current_row - 1, all->game_object);
+    }
+    if (all->input.down)
+    {
+        all->input.down = SDL_FALSE;
+        chg_animation_Game_object(all->current_row + 1, all->game_object);
+    }
+}
+
+SDL_bool switch_mode(SDL_bool *input, int mode, Everything *all)
 {
     if (*input)
     {
         *input = SDL_FALSE;
         all->mode = mode;
+        return SDL_TRUE;
     }
+    return SDL_FALSE;
 }
 
 void updateMode(Everything *all)
@@ -362,7 +380,7 @@ void updateMode(Everything *all)
                 all->input.Summit = SDL_FALSE;
                 if (fill_Game_object(all))
                 {
-                    all->mode = 1;
+                    all->mode = 2;
                 }
             }
         }
@@ -381,12 +399,16 @@ void updateMode(Everything *all)
         case 3 :        /* choix de l'animation avec affichage de la hitbox */
         {
             switch_mode(&all->input.Help, 1, all);
-            switch_mode(&all->input.Validate, 3, all);
+            switch_mode(&all->input.Validate, 2, all);
             switch_mode(&all->input.Summit, 4, all);
             break;
         }
         case 4 :        /* édition d'une hitbox */
         {
+            if (switch_mode(&all->input.Summit, 2, all))
+            {
+                build_Hitbox(all);
+            }
             break;
         }
     }

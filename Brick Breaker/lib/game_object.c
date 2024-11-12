@@ -104,7 +104,7 @@ void animate_Game_object(Game_object *object)
 
 void chg_animation_Game_object(int animation_line, Game_object *object)
 {
-    if (animation_line + 1 <= object->nb_row)
+    if (animation_line + 1 <= object->nb_row && animation_line >= 0)
     {
         object->src_rect.y = object->src_rect.h * animation_line;
         object->src_rect.x = 0;
