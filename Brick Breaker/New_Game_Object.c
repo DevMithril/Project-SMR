@@ -342,6 +342,15 @@ SDL_bool fill_Game_object(Everything *all)
     return SDL_TRUE;
 }
 
+void switch_mode(SDL_bool *input, int mode, Everything *all)
+{
+    if (*input)
+    {
+        *input = SDL_FALSE;
+        all->mode = mode;
+    }
+}
+
 void updateMode(Everything *all)
 {
     switch (all->mode)
@@ -359,29 +368,21 @@ void updateMode(Everything *all)
         }
         case 1 :        /* écran d'aide */
         {
-            if (all->input.Help)
-            {
-                all->input.Help = SDL_FALSE;
-                all->mode = 2;
-            }
+            switch_mode(&all->input.Help, 2, all);
             break;
         }
         case 2 :        /* choix de l'animation */
         {
-            if (all->input.Help)
-            {
-                all->input.Help = SDL_FALSE;
-                all->mode = 1;
-            }
+            switch_mode(&all->input.Help, 1, all);
+            switch_mode(&all->input.Validate, 3, all);
+            switch_mode(&all->input.Summit, 4, all);
             break;
         }
         case 3 :        /* choix de l'animation avec affichage de la hitbox */
         {
-            if (all->input.Help)
-            {
-                all->input.Help = SDL_FALSE;
-                all->mode = 1;
-            }
+            switch_mode(&all->input.Help, 1, all);
+            switch_mode(&all->input.Validate, 3, all);
+            switch_mode(&all->input.Summit, 4, all);
             break;
         }
         case 4 :        /* édition d'une hitbox */
