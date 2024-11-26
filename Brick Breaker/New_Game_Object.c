@@ -76,8 +76,18 @@ void updateEvent(Input *input)
 
 void load_Help_Screen(Everything *all)
 {
-    SDL_Color red = {255, 0, 0};
-    all->help_screen.title = read_Text("data/NGO/Text.txt", 2, "data/fonts/alagard.ttf", 20, red, all->renderer);
+    SDL_Color light_blue = {0, 150, 200};
+    all->help_screen.title = read_Text("data/NGO/Text.txt", 1, "data/fonts/8-bitanco.ttf", 20, light_blue, all->renderer);
+}
+
+void display_Help_Screen(Everything *all)
+{
+    display_Text(all->help_screen.title, all->renderer);
+}
+
+void destroy_Help_Screen(Everything *all)
+{
+    destroy_Text(&all->help_screen.title);
 }
 
 void loadKeys(Everything *all)
@@ -457,11 +467,11 @@ void runGame(Everything *all)
     {
         case 0 :        /* obtention des données de base */
         {
-            display_Text(all->help_screen.title, all->renderer);
             break;
         }
         case 1 :        /* écran d'aide */
         {
+            display_Text(all->help_screen.title, all->renderer);
             break;
         }
         case 2 :        /* choix de l'animation */
@@ -516,7 +526,6 @@ int main(int argc, char *argv[])
     Init(&all);
     loadKeys(&all);
     init_Game_object(&all);
-    load_Help_Screen(&all);
 
     /* Boucle principale du jeu */
 
@@ -529,6 +538,5 @@ int main(int argc, char *argv[])
 
     /* Fermeture du logiciel et libération de la mémoire */
 
-    destroy_Text(&all.help_screen.title);
     Quit(&all, EXIT_SUCCESS);
 }
