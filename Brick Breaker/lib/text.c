@@ -15,6 +15,7 @@ Text *create_Text(TTF_Font *font, const char text[], SDL_Color color, SDL_Render
     if(NULL == tmp)
     {
         fprintf(stderr, "Erreur SDL_CreateTextureFromSurface : %s\n", SDL_GetError());
+        SDL_FreeSurface(surface);
         return NULL;
     }
     texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, 
@@ -22,12 +23,17 @@ Text *create_Text(TTF_Font *font, const char text[], SDL_Color color, SDL_Render
     if(NULL == texture)
     {
         fprintf(stderr, "Erreur SDL_CreateTexture : %s\n", SDL_GetError());
+        SDL_FreeSurface(surface);
+        SDL_DestroyTexture(tmp);
         return NULL;
     }
     new = SDL_malloc(sizeof(Text));
     if (NULL == new)
     {
-        fprintf(stderr, "Erreur SDL_CreateTexture : %s\n", SDL_GetError());
+        fprintf(stderr, "Erreur SDL_malloc : %s\n", SDL_GetError());
+        SDL_FreeSurface(surface);
+        SDL_DestroyTexture(tmp);
+        SDL_DestroyTexture(texture);
         return NULL;
     }
     new->texture = texture;
@@ -49,31 +55,130 @@ Text *create_Text(TTF_Font *font, const char text[], SDL_Color color, SDL_Render
     return new;
 }
 
-void save_Text(FILE **file, const char *text, const char *font_file, int font_size, int a, int r, int g, int b)
+void save_Text(FILE **file, const char *text_file, int num_paragraph, const char *font_file, int font_size, SDL_Color color)
 {
-    char t[LEN_MAX_TEXT];
-    char font_f[MAX_LEN_FILE_NAME];
-    SDL_Color color = {.a = a, .r = r, .g = g, .b = b};
-    fwrite(text, sizeof(t), 1, *file);
-    fwrite(font_file, sizeof(font_f), 1, *file);
+    size_t size_text_file = sizeof(text_file);
+    size_t size_font_file = sizeof(font_file);
+    fwrite(&size_text_file, sizeof(size_t), 1, *file);
+    fwrite(text_file, size_text_file, 1, *file);
+    fwrite(&size_font_file, sizeof(size_t), 1, *file);
+    fwrite(font_file, size_font_file, 1, *file);
     fwrite(&font_size, sizeof(int), 1, *file);
     fwrite(&color, sizeof(SDL_Color), 1, *file);
+    fwrite(&num_paragraph, sizeof(int), 1, *file);
 }
 
-Text *load_Text(FILE **file, Text *text, SDL_Renderer *renderer)
+Text *load_Text(FILE **file, SDL_Renderer *renderer)
 {
-    char text[LEN_MAX_TEXT];
-    char font_file[MAX_LEN_FILE_NAME];
+    size_t size_text_file;
+    size_t size_font_file;
     int font_size;
-    TTF_Font *font;
     SDL_Color color;
+    int num_paragraph;
     Text *new = NULL;
-    fread(text, sizeof(text), 1, *file);
-    fread(font_file, sizeof(font_file), 1, *file);
+    fread(&size_text_file, sizeof(size_t), 1, *file);
+    char text_file[size_text_file];
+    fread(text_file, size_text_file, 1, *file);
+    fread(&size_font_file, sizeof(size_t), 1, *file);
+    char font_file[size_font_file];
+    fread(font_file, size_font_file, 1, *file);
     fread(&font_size, sizeof(int), 1, *file);
     fread(&color, sizeof(SDL_Color), 1, *file);
-    font = TTF_OpenFont(font_file, font_size);
-    new = create_Text(font, text, color, renderer);
+    fread(&num_paragraph, sizeof(int), 1, *file);
+    new = read_Text(text_file, num_paragraph, font_file, font_size, color, renderer);
+    return new;
+}
+
+Text *add_line(Text *origin, const char *line, TTF_Font *font, SDL_Color color, SDL_Renderer *renderer)
+{
+    Text *new = NULL;
+    Text *new_line = create_Text(font, line, color, renderer);
+    int o_h, o_w, nl_h, nl_w;
+    if (origin == NULL)
+    {
+        return new_line;
+    }
+    if (new_line == NULL)
+    {
+        return origin;
+    }
+    new = SDL_malloc(sizeof(Text));
+    if (NULL == new)
+    {
+        fprintf(stderr, "Erreur SDL_malloc : %s\n", SDL_GetError());
+        return NULL;
+    }
+    SDL_QueryTexture(origin->texture, NULL, NULL, &o_w, &o_h);
+    SDL_QueryTexture(new_line->texture, NULL, NULL, &nl_w, &nl_h);
+    int max_w;
+    if (o_w > nl_w)
+    {
+        max_w = o_w;
+    }
+    else
+    {
+        max_w = nl_w;
+    }
+    new->src_rect.h = o_h + nl_h;
+    new->src_rect.w = max_w;
+    new->src_rect.x = 0;
+    new->src_rect.y = 0;
+    new->dst_rect.h = o_h + nl_h;
+    new->dst_rect.w = max_w;
+    new->dst_rect.x = 0;
+    new->dst_rect.y = 0;
+    new->texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, max_w, o_h + nl_h);
+    if (new->texture == NULL)
+    {
+        fprintf(stderr, "Erreur SDL_CreateTexture : %s\n", SDL_GetError());
+        SDL_free(new);
+        destroy_Text(&new_line);
+        return origin;
+    }
+    new_line->dst_rect.y = origin->dst_rect.h;
+    SDL_SetRenderTarget(renderer, new->texture);
+    SDL_RenderCopy(renderer, origin->texture, NULL, &origin->dst_rect);
+    destroy_Text(&origin);
+    SDL_RenderCopy(renderer, new_line->texture, NULL, &new_line->dst_rect);
+    destroy_Text(&new_line);
+    SDL_SetRenderTarget(renderer, NULL);
+    SDL_SetTextureBlendMode(new->texture, SDL_BLENDMODE_BLEND);
+    return new;
+}
+
+Text *read_Text(const char *text_file_path, int num_paragraph, const char *font_file_path, int font_size, SDL_Color color, SDL_Renderer *renderer)
+{
+    FILE *text_file = NULL;
+    char line[200];
+    TTF_Font *font = NULL;
+    Text *new = NULL;
+    font = TTF_OpenFont(font_file_path, font_size);
+    if (font == NULL)
+    {
+        fprintf(stderr, "Erreur dans read_Text : impossible d'ouvrir '%s'\n", font_file_path);
+        return NULL;
+    }
+    text_file = fopen(text_file_path, "r");
+    if (text_file == NULL)
+    {
+        fprintf(stderr, "Erreur dans read_Text : impossible d'ouvrir '%s'\n", text_file_path);
+        TTF_CloseFont(font);
+        return NULL;
+    }
+    for (int i = 0; i < num_paragraph; i++)
+    {
+        do
+        {
+            fscanf(text_file, " %[^\n]", line);
+        } while (strcmp(line, "#$"));
+    }
+    fscanf(text_file, " %[^\n]", line);
+    while (strcmp(line, "#$"))
+    {
+        new = add_line(new, line, font, color, renderer);
+        fscanf(text_file, " %[^\n]", line);
+    }
+    fclose(text_file);
     TTF_CloseFont(font);
     return new;
 }
@@ -94,6 +199,10 @@ void destroy_Text(Text **text)
 
 void display_Text(Text *text, SDL_Renderer *renderer)
 {
+    if (text == NULL)
+    {
+        return;
+    }
     if (text->texture != NULL)
     {
         SDL_RenderCopy(renderer, text->texture, &text->src_rect, &text->dst_rect);

@@ -7,7 +7,6 @@
 #include <string.h>
 #include "hitbox.h"
 #include "texture.h"
-#include "my_standard.h"
 
 /* structure représentant un objet quelconque possédant des hitboxes et des sprites affichables */
 typedef struct Game_object

@@ -2,9 +2,9 @@
 
 void save_Game_object(FILE **file, Game_object *object, const char *texture_file)
 {
-    char texture[MAX_LEN_FILE_NAME];
-    strcpy(texture, texture_file);
-    fwrite(texture, sizeof(texture), 1, *file);
+    size_t size_texture_file = sizeof(texture_file);
+    fwrite(&size_texture_file, sizeof(size_t), 1, *file);
+    fwrite(texture_file, size_texture_file, 1, *file);
     fwrite(object, sizeof(Game_object), 1, *file);
     for (int i = 0; i < object->nb_row; i++)
     {
@@ -15,13 +15,15 @@ void save_Game_object(FILE **file, Game_object *object, const char *texture_file
 Game_object *load_Game_object(FILE **file, SDL_Renderer *renderer)
 {
     Game_object *object = NULL;
-    char texture_file[MAX_LEN_FILE_NAME];
+    size_t size_texture_file;
     object = malloc(sizeof(Game_object));
     if (NULL == object)
     {
         fprintf(stderr, "Erreur dans load_Game_object : Out of Memory\n");
         return NULL;
     }
+    fread(&size_texture_file, sizeof(size_t), 1, *file);
+    char texture_file[size_texture_file];
     fread(texture_file, sizeof(texture_file), 1, *file);
     object->texture = loadImage(texture_file, renderer);
     object->hitboxes = malloc(object->nb_row * sizeof(Hitbox*));

@@ -1,9 +1,11 @@
 #include <SDL2/SDL_ttf.h>
 #include "lib/game_object.h"
+#include "lib/text.h"
 
 /* 
 * resolution : 320x240
-* ligne de commande pour la compilation : gcc -o New_Game_Object New_Game_Object.c lib/game_object.c lib/hitbox.c lib/texture.c -lm $(sdl2-config --cflags --libs) -l SDL2_ttf
+* ligne de commande pour la compilation : 
+*   gcc -o New_Game_Object New_Game_Object.c lib/game_object.c lib/hitbox.c lib/texture.c lib/text.c -lm $(sdl2-config --cflags --libs) -l SDL2_ttf
 * pour utiliser valgrind (memoire) : 
 *   valgrind -s --tool=memcheck --leak-check=yes|no|full|summary --leak-resolution=low|med|high --show-reachable=yes --track-origins=yes ./New_Game_Object
 */
@@ -29,12 +31,19 @@ typedef struct Cursor
     int x, y;
 }Cursor;
 
+typedef struct Help_Screen
+{
+    Text *title;
+    Text *body;
+}Help_Screen;
+
 typedef struct Everything
 {
+    Help_Screen help_screen;
     Game_object *game_object;
     Point *list_points;
     Cursor cursor;
-    char texture_file[MAX_LEN_FILE_NAME];
+    char *texture_file;
     int mode, current_row;
     Input input;
     SDL_Renderer *renderer;
@@ -63,6 +72,12 @@ void updateEvent(Input *input)
     input->left = input->key[SDL_GetScancodeFromKey(input->key_left)];
     input->right = input->key[SDL_GetScancodeFromKey(input->key_right)];
     input->up = input->key[SDL_GetScancodeFromKey(input->key_up)];
+}
+
+void load_Help_Screen(Everything *all)
+{
+    SDL_Color red = {255, 0, 0};
+    all->help_screen.title = read_Text("data/NGO/Text.txt", 2, "data/fonts/alagard.ttf", 20, red, all->renderer);
 }
 
 void loadKeys(Everything *all)
@@ -312,7 +327,7 @@ void init_Game_object(Everything *all)
 
 void query_texture_path(Everything *all)
 {
-    char input[MAX_LEN_FILE_NAME];
+    char *input;
     scanf(" %s", input);
     strcpy(all->texture_file, input);
 }
@@ -442,6 +457,7 @@ void runGame(Everything *all)
     {
         case 0 :        /* obtention des données de base */
         {
+            display_Text(all->help_screen.title, all->renderer);
             break;
         }
         case 1 :        /* écran d'aide */
@@ -500,6 +516,7 @@ int main(int argc, char *argv[])
     Init(&all);
     loadKeys(&all);
     init_Game_object(&all);
+    load_Help_Screen(&all);
 
     /* Boucle principale du jeu */
 
@@ -512,5 +529,6 @@ int main(int argc, char *argv[])
 
     /* Fermeture du logiciel et libération de la mémoire */
 
+    destroy_Text(&all.help_screen.title);
     Quit(&all, EXIT_SUCCESS);
 }
