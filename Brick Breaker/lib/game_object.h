@@ -1,6 +1,5 @@
 #ifndef GAME__OBJECT__LIB__H
 #define GAME__OBJECT__LIB__H
-#define GAME_OBJECT_LEN_TEXTURE_FILE 80
 
 #include <SDL2/SDL.h>
 #include <stdio.h>
@@ -8,6 +7,7 @@
 #include <string.h>
 #include "hitbox.h"
 #include "texture.h"
+#include "my_standard.h"
 
 /* structure représentant un objet quelconque possédant des hitboxes et des sprites affichables */
 typedef struct Game_object

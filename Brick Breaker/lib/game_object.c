@@ -2,7 +2,7 @@
 
 void save_Game_object(FILE **file, Game_object *object, const char *texture_file)
 {
-    char texture[GAME_OBJECT_LEN_TEXTURE_FILE];
+    char texture[MAX_LEN_FILE_NAME];
     strcpy(texture, texture_file);
     fwrite(texture, sizeof(texture), 1, *file);
     fwrite(object, sizeof(Game_object), 1, *file);
@@ -15,7 +15,7 @@ void save_Game_object(FILE **file, Game_object *object, const char *texture_file
 Game_object *load_Game_object(FILE **file, SDL_Renderer *renderer)
 {
     Game_object *object = NULL;
-    char texture_file[GAME_OBJECT_LEN_TEXTURE_FILE];
+    char texture_file[MAX_LEN_FILE_NAME];
     object = malloc(sizeof(Game_object));
     if (NULL == object)
     {

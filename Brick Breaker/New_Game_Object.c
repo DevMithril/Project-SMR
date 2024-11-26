@@ -34,7 +34,7 @@ typedef struct Everything
     Game_object *game_object;
     Point *list_points;
     Cursor cursor;
-    char texture_file[GAME_OBJECT_LEN_TEXTURE_FILE];
+    char texture_file[MAX_LEN_FILE_NAME];
     int mode, current_row;
     Input input;
     SDL_Renderer *renderer;
@@ -312,7 +312,7 @@ void init_Game_object(Everything *all)
 
 void query_texture_path(Everything *all)
 {
-    char input[GAME_OBJECT_LEN_TEXTURE_FILE];
+    char input[MAX_LEN_FILE_NAME];
     scanf(" %s", input);
     strcpy(all->texture_file, input);
 }
