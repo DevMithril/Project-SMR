@@ -32,4 +32,7 @@ void display_Text(Text *text, SDL_Renderer *renderer);
 /* permet de déplacer un text */
 void move_Text(int x, int y, Text *text);
 
+/* permet de créer un text à partir d'une saisie */
+Text *scan_Text(char *text, const char *font_file_path, int font_size, SDL_Color color, SDL_Renderer *renderer);
+
 #endif

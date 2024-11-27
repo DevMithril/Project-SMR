@@ -1,8 +1,22 @@
 #$
-Help
+Aide
 #$
-test
-retour
-a la ligne
-.
+key up : numpad /
+key down : numpad 8
+key left : numpad 7
+key right : numpad 9
+key Validate : Space
+key Summit : Return
+key Delete : D
+key Help : H
+#$
+Creation Nouvel Objet
+#$
+Nb de colonnes : 
+&~
+Nb de lignes : 
+&~
+Chemin du fichier texture :          
+#$
+&~
 #$

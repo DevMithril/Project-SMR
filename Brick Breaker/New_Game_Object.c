@@ -37,13 +37,23 @@ typedef struct Help_Screen
     Text *body;
 }Help_Screen;
 
+typedef struct Creation_Screen
+{
+    Text *title;
+    Text *body;
+    Text *texture_path;
+    Text *nb_col;
+    Text *nb_row;
+}Creation_Screen;
+
 typedef struct Everything
 {
     Help_Screen help_screen;
+    Creation_Screen creation_screen;
     Game_object *game_object;
     Point *list_points;
     Cursor cursor;
-    char *texture_file;
+    char texture_file[1000];
     int mode, current_row;
     Input input;
     SDL_Renderer *renderer;
@@ -90,6 +100,43 @@ void destroy_Help_Screen(Everything *all)
     destroy_Text(&all->help_screen.title);
 }
 
+void load_Creation_Screen(Everything *all)
+{
+    SDL_Color light_blue = {0, 150, 200};
+    SDL_Color blue = {0, 100, 200};
+    all->creation_screen.title = read_Text("data/NGO/Text.txt", 3, "data/fonts/8-bitanco.ttf", 20, light_blue, all->renderer);
+    all->creation_screen.body = read_Text("data/NGO/Text.txt", 4, "data/fonts/alagard.ttf", 15, blue, all->renderer);
+    all->creation_screen.texture_path = read_Text("data/NGO/Text.txt", 5, "data/fonts/alagard.ttf", 15, blue, all->renderer);
+    all->creation_screen.nb_col = read_Text("data/NGO/Text.txt", 5, "data/fonts/alagard.ttf", 15, blue, all->renderer);
+    all->creation_screen.nb_row = read_Text("data/NGO/Text.txt", 5, "data/fonts/alagard.ttf", 15, blue, all->renderer);
+    move_Text(160 - all->creation_screen.title->src_rect.w / 2, 20, all->creation_screen.title);
+    move_Text(160 - all->creation_screen.body->src_rect.w / 2, 60, all->creation_screen.body);
+    move_Text(all->creation_screen.body->dst_rect.x, all->creation_screen.body->dst_rect.y + all->creation_screen.texture_path->src_rect.h * 5,
+                     all->creation_screen.texture_path);
+    move_Text(all->creation_screen.body->dst_rect.x, all->creation_screen.body->dst_rect.y + all->creation_screen.nb_col->src_rect.h * 3,
+                     all->creation_screen.nb_col);
+    move_Text(all->creation_screen.body->dst_rect.x, all->creation_screen.body->dst_rect.y + all->creation_screen.nb_row->src_rect.h * 1,
+                     all->creation_screen.nb_row);
+}
+
+void display_Creation_Screen(Everything *all)
+{
+    display_Text(all->creation_screen.title, all->renderer);
+    display_Text(all->creation_screen.body, all->renderer);
+    display_Text(all->creation_screen.texture_path, all->renderer);
+    display_Text(all->creation_screen.nb_col, all->renderer);
+    display_Text(all->creation_screen.nb_row, all->renderer);
+}
+
+void destroy_Creation_Screen(Everything *all)
+{
+    destroy_Text(&all->creation_screen.title);
+    destroy_Text(&all->creation_screen.body);
+    destroy_Text(&all->creation_screen.texture_path);
+    destroy_Text(&all->creation_screen.nb_col);
+    destroy_Text(&all->creation_screen.nb_row);
+}
+
 void loadKeys(Everything *all)
 {
     all->input.key_Validate = SDLK_SPACE;
@@ -100,6 +147,15 @@ void loadKeys(Everything *all)
     all->input.key_left = SDLK_KP_7;
     all->input.key_right = SDLK_KP_9;
     all->input.key_up = SDLK_KP_DIVIDE;
+
+    all->input.Validate = SDL_FALSE;
+    all->input.Summit = SDL_FALSE;
+    all->input.Delete = SDL_FALSE;
+    all->input.Help = SDL_FALSE;
+    all->input.down = SDL_FALSE;
+    all->input.left = SDL_FALSE;
+    all->input.right = SDL_FALSE;
+    all->input.up = SDL_FALSE;
 }
 
 void destroy_Point(Point *point, Everything *all)
@@ -159,6 +215,8 @@ void Quit(Everything *all, int status)
 {
     /* liberation de la RAM allouee */
 
+    destroy_Help_Screen(all);
+    destroy_Creation_Screen(all);
     while (all->list_points != NULL)
     {
         destroy_Point(all->list_points, all);
@@ -337,9 +395,12 @@ void init_Game_object(Everything *all)
 
 void query_texture_path(Everything *all)
 {
-    char *input;
-    scanf(" %s", input);
-    strcpy(all->texture_file, input);
+    SDL_Color color = {0, 100, 200};
+    int x = all->creation_screen.texture_path->dst_rect.x;
+    int y = all->creation_screen.texture_path->dst_rect.y;
+    destroy_Text(&all->creation_screen.texture_path);
+    all->creation_screen.texture_path = scan_Text(all->texture_file, "data/fonts/alagard.ttf", 15, color, all->renderer);
+    move_Text(x, y, all->creation_screen.texture_path);
 }
 
 SDL_bool fill_Game_object(Everything *all)
@@ -426,17 +487,25 @@ void updateMode(Everything *all)
                 if (fill_Game_object(all))
                 {
                     all->mode = 2;
+                    destroy_Creation_Screen(all);
+                    load_Help_Screen(all);
                 }
             }
         }
         case 1 :        /* écran d'aide */
         {
-            switch_mode(&all->input.Help, 2, all);
+            if (switch_mode(&all->input.Help, 2, all))
+            {
+                destroy_Help_Screen(all);
+            }
             break;
         }
         case 2 :        /* choix de l'animation */
         {
-            switch_mode(&all->input.Help, 1, all);
+            if (switch_mode(&all->input.Help, 1, all))
+            {
+                load_Help_Screen(all);
+            }
             switch_mode(&all->input.Validate, 3, all);
             switch_mode(&all->input.Summit, 4, all);
             break;
@@ -467,11 +536,16 @@ void runGame(Everything *all)
     {
         case 0 :        /* obtention des données de base */
         {
+            if (all->input.Validate)
+            {
+                query_texture_path(all);
+            }
+            display_Creation_Screen(all);
             break;
         }
         case 1 :        /* écran d'aide */
         {
-            display_Text(all->help_screen.title, all->renderer);
+            display_Help_Screen(all);
             break;
         }
         case 2 :        /* choix de l'animation */
@@ -526,6 +600,7 @@ int main(int argc, char *argv[])
     Init(&all);
     loadKeys(&all);
     init_Game_object(&all);
+    load_Creation_Screen(&all);
 
     /* Boucle principale du jeu */
 

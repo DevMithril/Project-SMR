@@ -92,10 +92,17 @@ Text *load_Text(FILE **file, SDL_Renderer *renderer)
 Text *add_line(Text *origin, const char *line, TTF_Font *font, SDL_Color color, SDL_Renderer *renderer)
 {
     Text *new = NULL;
-    Text *new_line = create_Text(font, line, color, renderer);
+    Text *new_line = NULL;
+    new_line = create_Text(font, line, color, renderer);
     int o_h, o_w, nl_h, nl_w;
     if (origin == NULL)
     {
+        if(!(strcmp(line, "&~")))
+        {
+            SDL_QueryTexture(new_line->texture, NULL, NULL, &nl_w, &nl_h);
+            SDL_DestroyTexture(new_line->texture);
+            new_line->texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, nl_w, nl_h);
+        }
         return new_line;
     }
     if (new_line == NULL)
@@ -139,7 +146,10 @@ Text *add_line(Text *origin, const char *line, TTF_Font *font, SDL_Color color, 
     SDL_SetRenderTarget(renderer, new->texture);
     SDL_RenderCopy(renderer, origin->texture, NULL, &origin->dst_rect);
     destroy_Text(&origin);
-    SDL_RenderCopy(renderer, new_line->texture, NULL, &new_line->dst_rect);
+    if(strcmp(line, "&~"))
+    {
+        SDL_RenderCopy(renderer, new_line->texture, NULL, &new_line->dst_rect);
+    }
     destroy_Text(&new_line);
     SDL_SetRenderTarget(renderer, NULL);
     SDL_SetTextureBlendMode(new->texture, SDL_BLENDMODE_BLEND);
@@ -172,11 +182,11 @@ Text *read_Text(const char *text_file_path, int num_paragraph, const char *font_
             fscanf(text_file, " %[^\n]", line);
         } while (strcmp(line, "#$"));
     }
-    fscanf(text_file, " %[^\n]", line);
+    fscanf(text_file, "\n%[^\n]", line);
     while (strcmp(line, "#$"))
     {
         new = add_line(new, line, font, color, renderer);
-        fscanf(text_file, " %[^\n]", line);
+        fscanf(text_file, "\n%[^\n]", line);
     }
     fclose(text_file);
     TTF_CloseFont(font);
@@ -213,4 +223,14 @@ void move_Text(int x, int y, Text *text)
 {
     text->dst_rect.x += x;
     text->dst_rect.y += y;
+}
+
+Text *scan_Text(char *text, const char *font_file_path, int font_size, SDL_Color color, SDL_Renderer *renderer)
+{
+    Text *new = NULL;
+    TTF_Font *font = TTF_OpenFont(font_file_path, font_size);
+    scanf(" %s", text);
+    new = create_Text(font, text, color, renderer);
+    TTF_CloseFont(font);
+    return new;
 }
