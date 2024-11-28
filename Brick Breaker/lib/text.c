@@ -229,34 +229,34 @@ Text *scan_Text(char *text, const char *font_file_path, int font_size, SDL_Color
 {
     Text *new = NULL;
     TTF_Font *font = TTF_OpenFont(font_file_path, font_size);
-    SDL_Event event;
-    SDL_bool end_of_input = SDL_FALSE;
-    SDL_Scancode car = SDL_SCANCODE_A;
-    int i = 0;
-    int imax = sizeof(text) / sizeof(char) - sizeof(char);
-    while (!end_of_input)
+    SDL_bool done = SDL_FALSE;
+    strcpy(text, "");
+    SDL_StartTextInput();
+    while (!done)
     {
-        while(SDL_PollEvent(&event) && !end_of_input)
+        SDL_Event event;
+        while(SDL_PollEvent(&event) && !done)
         {
             if(event.type == SDL_QUIT)
+            {
                 *input_quit = SDL_TRUE;
+                done = SDL_TRUE;
+            }
+            else if (event.type == SDL_TEXTINPUT)
+            {
+                strcat(text, event.text.text);
+            }
             else if(event.type == SDL_KEYDOWN)
             {
-                car = event.key.keysym.scancode;
-                if (car != SDL_SCANCODE_RETURN)
+                if (event.key.keysym.scancode == SDL_SCANCODE_RETURN)
                 {
-                    text[i] = *SDL_GetScancodeName(car);
-                    i++;
+                    done = SDL_TRUE;
                 }
             }
-            if (i >= imax || car == SDL_SCANCODE_RETURN)
-            {
-                end_of_input = SDL_TRUE;
-            }
         }
-        SDL_Delay(100);
+        SDL_Delay((int)(1000/60));
     }
-    text[i] = '\0';
+    SDL_StopTextInput();
     new = create_Text(font, text, color, renderer);
     TTF_CloseFont(font);
     return new;
