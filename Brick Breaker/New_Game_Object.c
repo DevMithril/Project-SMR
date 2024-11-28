@@ -84,6 +84,11 @@ void updateEvent(Input *input)
     input->up = input->key[SDL_GetScancodeFromKey(input->key_up)];
 }
 
+void resetKeyState(SDL_Keycode key, Everything *all)
+{
+    all->input.key[SDL_GetScancodeFromKey(key)] = SDL_FALSE;
+}
+
 void load_Help_Screen(Everything *all)
 {
     SDL_Color light_blue = {0, 150, 200};
@@ -338,12 +343,12 @@ void Init(Everything *all)
 {
     /* initialisation de la SDL et de la TTF */
 
-    if (0 != SDL_Init(SDL_INIT_VIDEO))
+    if (SDL_Init(SDL_INIT_VIDEO))
     {
         fprintf(stderr, "Erreur SDL_Init : %s\n", SDL_GetError());
         Quit(all, EXIT_FAILURE);
     }
-    if (0 != TTF_Init())
+    if (TTF_Init())
     {
         fprintf(stderr, "Erreur TTF_Init : %s\n", TTF_GetError());
         Quit(all, EXIT_FAILURE);
@@ -399,7 +404,8 @@ void query_texture_path(Everything *all)
     int x = all->creation_screen.texture_path->dst_rect.x;
     int y = all->creation_screen.texture_path->dst_rect.y;
     destroy_Text(&all->creation_screen.texture_path);
-    all->creation_screen.texture_path = scan_Text(all->texture_file, "data/fonts/alagard.ttf", 15, color, all->renderer);
+    all->creation_screen.texture_path = scan_Text(all->texture_file, "data/fonts/alagard.ttf", 15, color, all->renderer, &all->input.quit);
+    printf("%s\n", all->texture_file);
     move_Text(x, y, all->creation_screen.texture_path);
 }
 
@@ -539,6 +545,7 @@ void runGame(Everything *all)
             if (all->input.Validate)
             {
                 query_texture_path(all);
+                resetKeyState(all->input.key_Validate, all);
             }
             display_Creation_Screen(all);
             break;

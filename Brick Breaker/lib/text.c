@@ -225,11 +225,38 @@ void move_Text(int x, int y, Text *text)
     text->dst_rect.y += y;
 }
 
-Text *scan_Text(char *text, const char *font_file_path, int font_size, SDL_Color color, SDL_Renderer *renderer)
+Text *scan_Text(char *text, const char *font_file_path, int font_size, SDL_Color color, SDL_Renderer *renderer, SDL_bool *input_quit)
 {
     Text *new = NULL;
     TTF_Font *font = TTF_OpenFont(font_file_path, font_size);
-    scanf(" %s", text);
+    SDL_Event event;
+    SDL_bool end_of_input = SDL_FALSE;
+    SDL_Scancode car = SDL_SCANCODE_A;
+    int i = 0;
+    int imax = sizeof(text) / sizeof(char) - sizeof(char);
+    while (!end_of_input)
+    {
+        while(SDL_PollEvent(&event) && !end_of_input)
+        {
+            if(event.type == SDL_QUIT)
+                *input_quit = SDL_TRUE;
+            else if(event.type == SDL_KEYDOWN)
+            {
+                car = event.key.keysym.scancode;
+                if (car != SDL_SCANCODE_RETURN)
+                {
+                    text[i] = *SDL_GetScancodeName(car);
+                    i++;
+                }
+            }
+            if (i >= imax || car == SDL_SCANCODE_RETURN)
+            {
+                end_of_input = SDL_TRUE;
+            }
+        }
+        SDL_Delay(100);
+    }
+    text[i] = '\0';
     new = create_Text(font, text, color, renderer);
     TTF_CloseFont(font);
     return new;
