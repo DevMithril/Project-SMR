@@ -70,7 +70,7 @@ void destroy_Game_object(Game_object **object)
         }
         free((*object)->hitboxes);
     }
-    free((*object));
+    free(*object);
     *object = NULL;
 }
 

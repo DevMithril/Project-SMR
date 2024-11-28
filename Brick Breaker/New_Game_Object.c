@@ -5,7 +5,7 @@
 /* 
 * resolution : 320x240
 * ligne de commande pour la compilation : 
-*   gcc -o New_Game_Object New_Game_Object.c lib/game_object.c lib/hitbox.c lib/texture.c lib/text.c -lm $(sdl2-config --cflags --libs) -l SDL2_ttf
+*   gcc -o New_Game_Object New_Game_Object.c lib/*.c -lm $(sdl2-config --cflags --libs) -l SDL2_ttf
 * pour utiliser valgrind (memoire) : 
 *   valgrind -s --tool=memcheck --leak-check=yes|no|full|summary --leak-resolution=low|med|high --show-reachable=yes --track-origins=yes ./New_Game_Object
 */
@@ -118,9 +118,9 @@ void load_Creation_Screen(Everything *all)
     move_Text(160 - all->creation_screen.body->src_rect.w / 2, 60, all->creation_screen.body);
     move_Text(all->creation_screen.body->dst_rect.x, all->creation_screen.body->dst_rect.y + all->creation_screen.texture_path->src_rect.h * 5,
                      all->creation_screen.texture_path);
-    move_Text(all->creation_screen.body->dst_rect.x, all->creation_screen.body->dst_rect.y + all->creation_screen.nb_col->src_rect.h * 3,
+    move_Text(all->creation_screen.body->dst_rect.x, all->creation_screen.body->dst_rect.y + all->creation_screen.nb_col->src_rect.h * 1,
                      all->creation_screen.nb_col);
-    move_Text(all->creation_screen.body->dst_rect.x, all->creation_screen.body->dst_rect.y + all->creation_screen.nb_row->src_rect.h * 1,
+    move_Text(all->creation_screen.body->dst_rect.x, all->creation_screen.body->dst_rect.y + all->creation_screen.nb_row->src_rect.h * 3,
                      all->creation_screen.nb_row);
 }
 
@@ -405,8 +405,31 @@ void query_texture_path(Everything *all)
     int y = all->creation_screen.texture_path->dst_rect.y;
     destroy_Text(&all->creation_screen.texture_path);
     all->creation_screen.texture_path = scan_Text(all->texture_file, "data/fonts/alagard.ttf", 15, color, all->renderer, &all->input.quit);
-    printf("%s\n", all->texture_file);
     move_Text(x, y, all->creation_screen.texture_path);
+}
+
+void query_nb_row(Everything *all)
+{
+    SDL_Color color = {0, 100, 200};
+    char text[100];
+    int x = all->creation_screen.nb_row->dst_rect.x;
+    int y = all->creation_screen.nb_row->dst_rect.y;
+    destroy_Text(&all->creation_screen.nb_row);
+    all->creation_screen.nb_row = scan_Text(text, "data/fonts/alagard.ttf", 15, color, all->renderer, &all->input.quit);
+    move_Text(x, y, all->creation_screen.nb_row);
+    sscanf(text, "%d", &all->game_object->nb_row);
+}
+
+void query_nb_col(Everything *all)
+{
+    SDL_Color color = {0, 100, 200};
+    char text[100];
+    int x = all->creation_screen.nb_col->dst_rect.x;
+    int y = all->creation_screen.nb_col->dst_rect.y;
+    destroy_Text(&all->creation_screen.nb_col);
+    all->creation_screen.nb_col = scan_Text(text, "data/fonts/alagard.ttf", 15, color, all->renderer, &all->input.quit);
+    move_Text(x, y, all->creation_screen.nb_col);
+    sscanf(text, "%d", &all->game_object->nb_col);
 }
 
 SDL_bool fill_Game_object(Everything *all)
@@ -425,6 +448,10 @@ SDL_bool fill_Game_object(Everything *all)
     {
         fprintf(stderr, "Erreur dans fill_Game_object : Out of Memory\n");
         Quit(all, EXIT_FAILURE);
+    }
+    for (int i = 0; i < all->game_object->nb_row; i++)
+    {
+        all->game_object->hitboxes[i] = NULL;
     }
     SDL_QueryTexture(all->game_object->texture, NULL, NULL, &all->game_object->src_rect.w, &all->game_object->src_rect.h);
     all->game_object->src_rect.x = 0;
@@ -492,11 +519,12 @@ void updateMode(Everything *all)
                 all->input.Summit = SDL_FALSE;
                 if (fill_Game_object(all))
                 {
-                    all->mode = 2;
+                    all->mode = 1;
                     destroy_Creation_Screen(all);
                     load_Help_Screen(all);
                 }
             }
+            break;
         }
         case 1 :        /* écran d'aide */
         {
@@ -542,7 +570,17 @@ void runGame(Everything *all)
     {
         case 0 :        /* obtention des données de base */
         {
-            if (all->input.Validate)
+            if (all->input.Help)
+            {
+                query_nb_col(all);
+                resetKeyState(all->input.key_Help, all);
+            }
+            else if (all->input.Delete)
+            {
+                query_nb_row(all);
+                resetKeyState(all->input.key_Delete, all);
+            }
+            else if (all->input.Validate)
             {
                 query_texture_path(all);
                 resetKeyState(all->input.key_Validate, all);

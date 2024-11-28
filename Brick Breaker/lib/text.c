@@ -195,7 +195,7 @@ Text *read_Text(const char *text_file_path, int num_paragraph, const char *font_
 
 void destroy_Text(Text **text)
 {
-    if (*text == NULL)
+    if ((*text) == NULL)
     {
         return;
     }

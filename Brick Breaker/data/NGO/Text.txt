@@ -12,11 +12,11 @@ key Help : H
 #$
 Creation Nouvel Objet
 #$
-Nb de colonnes : 
+Nb de colonnes : H
 &~
-Nb de lignes : 
+Nb de lignes : D
 &~
-Chemin du fichier texture :          
+Chemin du fichier texture : Space    
 #$
 &~
 #$
