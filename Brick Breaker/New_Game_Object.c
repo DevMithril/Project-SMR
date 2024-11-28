@@ -92,17 +92,23 @@ void resetKeyState(SDL_Keycode key, Everything *all)
 void load_Help_Screen(Everything *all)
 {
     SDL_Color light_blue = {0, 150, 200};
+    SDL_Color blue = {0, 100, 200};
     all->help_screen.title = read_Text("data/NGO/Text.txt", 1, "data/fonts/8-bitanco.ttf", 20, light_blue, all->renderer);
+    all->help_screen.body = read_Text("data/NGO/Text.txt", 2, "data/fonts/alagard.ttf", 15, blue, all->renderer);
+    move_Text(160 - all->help_screen.title->src_rect.w / 2, 20, all->help_screen.title);
+    move_Text(160 - all->help_screen.body->src_rect.w / 2, 60, all->help_screen.body);
 }
 
 void display_Help_Screen(Everything *all)
 {
     display_Text(all->help_screen.title, all->renderer);
+    display_Text(all->help_screen.body, all->renderer);
 }
 
 void destroy_Help_Screen(Everything *all)
 {
     destroy_Text(&all->help_screen.title);
+    destroy_Text(&all->help_screen.body);
 }
 
 void load_Creation_Screen(Everything *all)
@@ -531,6 +537,7 @@ void updateMode(Everything *all)
             if (switch_mode(&all->input.Help, 2, all))
             {
                 destroy_Help_Screen(all);
+                resetKeyState(all->input.key_Help, all);
             }
             break;
         }
@@ -539,16 +546,32 @@ void updateMode(Everything *all)
             if (switch_mode(&all->input.Help, 1, all))
             {
                 load_Help_Screen(all);
+                resetKeyState(all->input.key_Help, all);
             }
-            switch_mode(&all->input.Validate, 3, all);
-            switch_mode(&all->input.Summit, 4, all);
+            if (switch_mode(&all->input.Validate, 3, all))
+            {
+                resetKeyState(all->input.key_Validate, all);
+            }
+            if (switch_mode(&all->input.Summit, 4, all))
+            {
+                resetKeyState(all->input.key_Summit, all);
+            }
             break;
         }
         case 3 :        /* choix de l'animation avec affichage de la hitbox */
         {
-            switch_mode(&all->input.Help, 1, all);
-            switch_mode(&all->input.Validate, 2, all);
-            switch_mode(&all->input.Summit, 4, all);
+            if (switch_mode(&all->input.Help, 1, all))
+            {
+                resetKeyState(all->input.key_Help, all);
+            }
+            if (switch_mode(&all->input.Validate, 2, all))
+            {
+                resetKeyState(all->input.key_Validate, all);
+            }
+            if (switch_mode(&all->input.Summit, 4, all))
+            {
+                resetKeyState(all->input.key_Summit, all);
+            }
             break;
         }
         case 4 :        /* édition d'une hitbox */
@@ -556,6 +579,7 @@ void updateMode(Everything *all)
             if (switch_mode(&all->input.Summit, 2, all))
             {
                 build_Hitbox(all);
+                resetKeyState(all->input.key_Summit, all);
             }
             break;
         }
