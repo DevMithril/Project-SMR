@@ -51,7 +51,7 @@ typedef struct Everything
     Help_Screen help_screen;
     Creation_Screen creation_screen;
     Game_object *game_object;
-    Point *list_points;
+    Point list_points;
     Cursor cursor;
     char texture_file[1000];
     int mode, current_row;
@@ -171,7 +171,7 @@ void loadKeys(Everything *all)
 
 void destroy_Point(Point *point, Everything *all)
 {
-    Point *liste = all->list_points;
+    Point *liste = &all->list_points;
     if (point == NULL)
     {
         printf("Erreur dans destroy_Point : le point passée en paramètre est un pointeur null \n");
@@ -186,11 +186,25 @@ void destroy_Point(Point *point, Everything *all)
     liste->suivant = next;
 }
 
+void load_Cursor(Everything *all)
+{
+    if (all->cursor.texture == NULL)
+    {
+        all->cursor.texture = loadImage("data/NGO/cursor.bmp", all->renderer);
+    }
+    all->cursor.x = 0;
+    all->cursor.y = 0;
+    all->cursor.target_render_texture.x = 0;
+    all->cursor.target_render_texture.y = 0;
+    SDL_QueryTexture(all->cursor.texture, NULL, NULL, &all->cursor.target_render_texture.w, &all->cursor.target_render_texture.h);
+}
+
 void destroy_Cursor(Everything *all)
 {
     if (all->cursor.texture != NULL)
     {
         SDL_DestroyTexture(all->cursor.texture);
+        all->cursor.texture = NULL;
     }
 }
 
@@ -214,7 +228,7 @@ void display_Point(Point *point, Everything *all)
 
 void display_Points(Everything *all)
 {
-    Point *point = all->list_points;
+    Point *point = &all->list_points;
     while (point->suivant != NULL)
     {
         display_Point(point->suivant, all);
@@ -228,9 +242,9 @@ void Quit(Everything *all, int status)
 
     destroy_Help_Screen(all);
     destroy_Creation_Screen(all);
-    while (all->list_points != NULL)
+    while (all->list_points.suivant != NULL)
     {
-        destroy_Point(all->list_points, all);
+        destroy_Point(all->list_points.suivant, all);
     }
     destroy_Game_object(&all->game_object);
 
@@ -251,10 +265,10 @@ void Quit(Everything *all, int status)
 
 void add_Point(Everything *all)
 {
-    Point *liste = all->list_points;
+    Point *liste = &all->list_points;
     if (all->input.Validate)
     {
-        all->input.Validate = SDL_FALSE;
+        resetKeyState(all->input.key_Validate, all);
         while (liste->suivant != NULL)
         {
             liste = liste->suivant;
@@ -274,7 +288,7 @@ void add_Point(Everything *all)
 
 void del_Point(Everything *all)
 {
-    Point *liste = all->list_points->suivant;
+    Point *liste = all->list_points.suivant;
     if (all->input.Delete)
     {
         all->input.Delete = SDL_FALSE;
@@ -292,7 +306,7 @@ void del_Point(Everything *all)
 
 void build_Hitbox(Everything *all)
 {
-    Point *point = all->list_points;
+    Point *point = &all->list_points;
     int nb_points = 0, x_min = 0, x_max = 0, y_min = 0, y_max = 0;
     while (point->suivant != NULL)
     {
@@ -301,13 +315,13 @@ void build_Hitbox(Everything *all)
     }
     if (3 > nb_points)
     {
-        point = all->list_points;
+        point = &all->list_points;
         while (point->suivant != NULL)
             destroy_Point(point->suivant, all);
         return;
     }
     destroy_Hitbox(&all->game_object->current_hitbox);
-    point = all->list_points->suivant;
+    point = all->list_points.suivant;
     Hitbox *new_hitbox = malloc(sizeof(Hitbox));
     if (new_hitbox == NULL)
     {
@@ -342,6 +356,11 @@ void build_Hitbox(Everything *all)
     }
     new_hitbox->cercle_x = x_min + (x_max - x_min) / 2;
     new_hitbox->cercle_y = y_min + (y_max - y_min) / 2;
+    for (int i = 0; i < new_hitbox->nb_points; i++)
+    {
+        new_hitbox->points[i].x -= new_hitbox->cercle_x;
+        new_hitbox->points[i].y -= new_hitbox->cercle_y;
+    }    
     new_hitbox->cercle_rayon = (int)sqrt((double)((x_max-x_min) * (x_max-x_min) + (y_max-y_min) * (y_max-y_min))) / 2;
 }
 
@@ -459,7 +478,10 @@ SDL_bool fill_Game_object(Everything *all)
     {
         all->game_object->hitboxes[i] = NULL;
     }
+    all->game_object->current_hitbox = NULL;
     SDL_QueryTexture(all->game_object->texture, NULL, NULL, &all->game_object->src_rect.w, &all->game_object->src_rect.h);
+    all->game_object->src_rect.h = all->game_object->src_rect.h / all->game_object->nb_row;
+    all->game_object->src_rect.w = all->game_object->src_rect.w / all->game_object->nb_col;
     all->game_object->src_rect.x = 0;
     all->game_object->src_rect.y = 0;
     all->game_object->dst_rect.h = all->game_object->src_rect.h;
@@ -475,32 +497,63 @@ void choose_animation(Everything *all)
     {
         if (all->current_row == 0)
         {
-            all->input.up = SDL_FALSE;
             chg_animation_Game_object(all->game_object->nb_row - 1, all->game_object);
             all->current_row = all->game_object->nb_row - 1;
         }
         else
         {
-            all->input.up = SDL_FALSE;
             chg_animation_Game_object(all->current_row - 1, all->game_object);
             all->current_row -= 1;
         }
+        resetKeyState(all->input.key_up, all);
     }
     if (all->input.down)
     {
         if (all->current_row == all->game_object->nb_row - 1)
         {
-            all->input.down = SDL_FALSE;
             chg_animation_Game_object(0, all->game_object);
             all->current_row = 0;
         }
         else
         {
-            all->input.down = SDL_FALSE;
             chg_animation_Game_object(all->current_row + 1, all->game_object);
             all->current_row += 1;
         }
+        resetKeyState(all->input.key_down, all);
     }
+}
+
+void move_Cursor(int x, int y, Everything *all)
+{
+    all->cursor.x += x;
+    all->cursor.y += y;
+    all->cursor.target_render_texture.x += x;
+    all->cursor.target_render_texture.y += y;
+}
+
+void update_Cursor(Everything *all)
+{
+    if (all->input.left)
+    {
+        move_Cursor(-1, 0, all);
+        resetKeyState(all->input.key_left, all);
+    }
+    if (all->input.right)
+    {
+        move_Cursor(1, 0, all);
+        resetKeyState(all->input.key_right, all);
+    }
+    if (all->input.up)
+    {
+        move_Cursor(0, -1, all);
+        resetKeyState(all->input.key_up, all);
+    }
+    if (all->input.down)
+    {
+        move_Cursor(0, 1, all);
+        resetKeyState(all->input.key_down, all);
+    }
+    display_Cursor(all);
 }
 
 SDL_bool switch_mode(SDL_bool *input, int mode, Everything *all)
@@ -534,7 +587,7 @@ void updateMode(Everything *all)
         }
         case 1 :        /* écran d'aide */
         {
-            if (switch_mode(&all->input.Help, 2, all))
+            if (switch_mode(&all->input.Help, 3, all))
             {
                 destroy_Help_Screen(all);
                 resetKeyState(all->input.key_Help, all);
@@ -554,6 +607,7 @@ void updateMode(Everything *all)
             }
             if (switch_mode(&all->input.Summit, 4, all))
             {
+                load_Cursor(all);
                 resetKeyState(all->input.key_Summit, all);
             }
             break;
@@ -562,6 +616,7 @@ void updateMode(Everything *all)
         {
             if (switch_mode(&all->input.Help, 1, all))
             {
+                load_Help_Screen(all);
                 resetKeyState(all->input.key_Help, all);
             }
             if (switch_mode(&all->input.Validate, 2, all))
@@ -570,15 +625,17 @@ void updateMode(Everything *all)
             }
             if (switch_mode(&all->input.Summit, 4, all))
             {
+                load_Cursor(all);
                 resetKeyState(all->input.key_Summit, all);
             }
             break;
         }
         case 4 :        /* édition d'une hitbox */
         {
-            if (switch_mode(&all->input.Summit, 2, all))
+            if (switch_mode(&all->input.Summit, 3, all))
             {
                 build_Hitbox(all);
+                destroy_Cursor(all);
                 resetKeyState(all->input.key_Summit, all);
             }
             break;
@@ -646,6 +703,7 @@ void runGame(Everything *all)
                 display_Hitbox(all->game_object->current_hitbox, all->renderer);
             }
             display_Points(all);
+            update_Cursor(all);
             break;
         }
     }
@@ -658,7 +716,7 @@ int main(int argc, char *argv[])
 {
     /* Création des variables */
 
-    Everything all = {.renderer = NULL, .window = NULL, .game_object = NULL, .list_points = NULL};
+    Everything all = {.renderer = NULL, .window = NULL, .game_object = NULL, .list_points.suivant = NULL, .cursor.texture = NULL};
     all.input.quit = SDL_FALSE;
     all.mode = 0;
     for (int i = 0; i < SDL_NUM_SCANCODES; i++)
