@@ -14,8 +14,8 @@ typedef struct Input
 {
     SDL_bool key[SDL_NUM_SCANCODES];
     SDL_bool quit;
-    SDL_Keycode key_up, key_down, key_left, key_right, key_Validate, key_Summit, key_Delete, key_Help;  /* /;8;7;9;Space;Return;D;H */
-    SDL_bool up, down, left, right, Validate, Summit, Delete, Help;
+    SDL_Keycode key_up, key_down, key_left, key_right, key_Validate, key_Summit, key_Delete, key_Help, key_Save;  /* /;8;7;9;Space;Return;D;H;S */
+    SDL_bool up, down, left, right, Validate, Summit, Delete, Help, Save;
 }Input;
 
 typedef struct Point
@@ -82,6 +82,7 @@ void updateEvent(Input *input)
     input->left = input->key[SDL_GetScancodeFromKey(input->key_left)];
     input->right = input->key[SDL_GetScancodeFromKey(input->key_right)];
     input->up = input->key[SDL_GetScancodeFromKey(input->key_up)];
+    input->Save = input->key[SDL_GetScancodeFromKey(input->key_Save)];
 }
 
 void resetKeyState(SDL_Keycode key, Everything *all)
@@ -158,6 +159,7 @@ void loadKeys(Everything *all)
     all->input.key_left = SDLK_KP_7;
     all->input.key_right = SDLK_KP_9;
     all->input.key_up = SDLK_KP_DIVIDE;
+    all->input.key_Save = SDLK_s;
 
     all->input.Validate = SDL_FALSE;
     all->input.Summit = SDL_FALSE;
@@ -167,6 +169,7 @@ void loadKeys(Everything *all)
     all->input.left = SDL_FALSE;
     all->input.right = SDL_FALSE;
     all->input.up = SDL_FALSE;
+    all->input.Save = SDL_FALSE;
 }
 
 void destroy_Point(Point *point, Everything *all)
@@ -194,8 +197,8 @@ void load_Cursor(Everything *all)
     }
     all->cursor.x = 0;
     all->cursor.y = 0;
-    all->cursor.target_render_texture.x = 0;
-    all->cursor.target_render_texture.y = 0;
+    all->cursor.target_render_texture.x = -1;
+    all->cursor.target_render_texture.y = -1;
     SDL_QueryTexture(all->cursor.texture, NULL, NULL, &all->cursor.target_render_texture.w, &all->cursor.target_render_texture.h);
 }
 
