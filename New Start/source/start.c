@@ -1,16 +1,6 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
 #include <string.h>
-
-typedef struct Input
-{
-    SDL_bool key[SDL_NUM_SCANCODES];
-    SDL_bool quit;
-    SDL_Keycode key_up, key_down, key_left, key_right, key_Validate, key_Summit, key_Delete, key_Help;  /* /;8;7;9;Space;Return;D;H */
-    SDL_bool up, down, left, right, Validate, Summit, Delete, Help;
-}Input;
+#include "input.h"
 
 typedef struct Data
 {
@@ -24,30 +14,6 @@ typedef struct Everything
     SDL_Renderer *renderer;
     SDL_Window *window;
 }Everything;
-
-void updateEvent(Input *input)
-{
-    SDL_Event event;
-    while(SDL_PollEvent(&event))
-    {
-        if(event.type == SDL_QUIT)
-            input->quit = SDL_TRUE;
-        else if(event.type == SDL_KEYDOWN)
-        {
-            input->key[event.key.keysym.scancode] = SDL_TRUE;
-        }
-        else if(event.type == SDL_KEYUP)
-            input->key[event.key.keysym.scancode] = SDL_FALSE;
-    }
-    input->Validate = input->key[SDL_GetScancodeFromKey(input->key_Validate)];
-    input->Summit = input->key[SDL_GetScancodeFromKey(input->key_Summit)];
-    input->Delete = input->key[SDL_GetScancodeFromKey(input->key_Delete)];
-    input->Help = input->key[SDL_GetScancodeFromKey(input->key_Help)];
-    input->down = input->key[SDL_GetScancodeFromKey(input->key_down)];
-    input->left = input->key[SDL_GetScancodeFromKey(input->key_left)];
-    input->right = input->key[SDL_GetScancodeFromKey(input->key_right)];
-    input->up = input->key[SDL_GetScancodeFromKey(input->key_up)];
-}
 
 void quit(Everything *all, int status)
 {

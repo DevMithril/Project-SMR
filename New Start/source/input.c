@@ -1,26 +1,30 @@
 #include "input.h"
 
-void updateEvent(Input *input)
+void update_Input(Input *input)
 {
     SDL_Event event;
     while(SDL_PollEvent(&event))
     {
-        if(event.type == SDL_QUIT)
-            input->quit = SDL_TRUE;
-        else if(event.type == SDL_KEYDOWN)
+        switch (event.type)
         {
+        case SDL_QUIT :
+            input->quit = SDL_TRUE;
+            break;
+        case SDL_KEYDOWN :
             input->key[event.key.keysym.scancode] = SDL_TRUE;
-        }
-        else if(event.type == SDL_KEYUP)
+            break;
+        case SDL_KEYUP :
             input->key[event.key.keysym.scancode] = SDL_FALSE;
+            break;
+        }
     }
-    input->down = input->key[SDL_GetScancodeFromKey(input->key_down)];
-    input->left = input->key[SDL_GetScancodeFromKey(input->key_left)];
-    input->right = input->key[SDL_GetScancodeFromKey(input->key_right)];
-    input->up = input->key[SDL_GetScancodeFromKey(input->key_up)];
+    input->down = input->key[input->key_down];
+    input->left = input->key[input->key_left];
+    input->right = input->key[input->key_right];
+    input->up = input->key[input->key_up];
 }
 
-void resetKeyState(SDL_Keycode key, Input *input)
+void resetKeyState_Input(SDL_Scancode key, Input *input)
 {
-    input->key[SDL_GetScancodeFromKey(key)] = SDL_FALSE;
+    input->key[key] = SDL_FALSE;
 }

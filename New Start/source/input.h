@@ -8,14 +8,14 @@ typedef struct Input
 {
     SDL_bool key[SDL_NUM_SCANCODES];
     SDL_bool quit;
-    SDL_Keycode key_up, key_down, key_left, key_right;  /* arrows */
+    SDL_Scancode key_up, key_down, key_left, key_right;
     SDL_bool up, down, left, right;
 }Input;
 
 /* met à jour la structure input */
-void updateEvent(Input *input);
+void update_Input(Input *input);
 
-/* force l'input à SDL_FALSE */
-void resetKeyState(SDL_Keycode key, Input *input);
+/* force une key à SDL_FALSE */
+void resetKeyState_Input(SDL_Scancode key, Input *input);
 
 #endif
