@@ -1,0 +1,1 @@
+compilation command : gcc -o start lib/*.c -lm
