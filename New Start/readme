@@ -1,1 +1,2 @@
-compilation command : gcc -o start lib/*.c -lm
+compilation command : gcc -o start source/*.c -lm $(sdl2-config --cflags --libs) -l SDL2_ttf
+if any issue with text rendering : __NV_PRIME_RENDER_OFFLOAD=1 __GLX_VENDOR_LIBRARY_NAME=nvidia ./
