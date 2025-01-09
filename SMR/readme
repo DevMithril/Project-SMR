@@ -1,0 +1,3 @@
+Will you find the meaning of the SMR accronym ?
+
+linux compilation : gcc -o SMR lib/*.c -lm $(sdl2-config --cflags --libs) -l SDL2_ttf
