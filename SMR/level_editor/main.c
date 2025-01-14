@@ -184,6 +184,8 @@ void load_level(Everything *all)
 
     fclose(file);
 
+    all->cur_level.tile_src_dst.x = all->level.src.x;
+    all->cur_level.tile_src_dst.y = all->level.src.y;
     move_cam_Level(-144, -112, &all->level);
 }
 
@@ -191,7 +193,7 @@ void save_level(Everything *all)
 {
     char file_path[200];
     FILE *file = NULL;
-    int max_x, max_y;
+    int min_x, min_y;
 
     printf("Ecrire le chemin du fichier à sauvegarder : ");
     scanf(" %s", file_path);
@@ -205,37 +207,45 @@ void save_level(Everything *all)
 
     if (all->tile_array != NULL)
     {
-        all->level.src.x = all->tile_array[0].dst.x;
-        all->level.src.y = all->tile_array[0].dst.y;
+        min_x = all->tile_array[0].dst.x;
+        min_y = all->tile_array[0].dst.y;
     }
     for (int i = 0; i < all->nb_tiles; i++)
     {
-        if (all->level.src.x > all->tile_array[i].dst.x)
+        if (min_x > all->tile_array[i].dst.x)
         {
-            all->level.src.x = all->tile_array[i].dst.x;
+            min_x = all->tile_array[i].dst.x;
         }
-        if (all->level.src.y > all->tile_array[i].dst.y)
+        if (min_y > all->tile_array[i].dst.y)
         {
-            all->level.src.y = all->tile_array[i].dst.y;
+            min_y = all->tile_array[i].dst.y;
         }
     }
     all->level.src.w = 320;
     all->level.src.h = 240;
+    all->level.src.x = 0;
+    all->level.src.y = 0;
     all->level.size_x = 0;
     all->level.size_y = 0;
     for (int i = 0; i < all->nb_tiles; i++)
     {
-        if (all->level.size_x < all->tile_array[i].dst.x - all->level.src.x)
+        all->tile_array[i].dst.x -= min_x;
+        all->tile_array[i].dst.y -= min_y;
+        if (all->level.size_x < all->tile_array[i].dst.x)
         {
-            all->level.size_x = all->tile_array[i].dst.x - all->level.src.x;
+            all->level.size_x = all->tile_array[i].dst.x;
         }
-        if (all->level.size_y < all->tile_array[i].dst.y - all->level.src.y)
+        if (all->level.size_y < all->tile_array[i].dst.y)
         {
-            all->level.size_y = all->tile_array[i].dst.y - all->level.src.y;
+            all->level.size_y = all->tile_array[i].dst.y;
         }
     }
     all->level.size_x += 16;
     all->level.size_y += 16;
+    for (int i = 0; i < all->level.nb_hitboxes; i++)
+    {
+        move_Hitbox(-min_x, -min_y, &all->level.hitboxes[i]);
+    }
     fwrite(&all->level, sizeof(Level), 1, file);
     fwrite(&all->nb_tiles, sizeof(int), 1, file);
     fwrite(all->tile_array, sizeof(Tile), all->nb_tiles, file);

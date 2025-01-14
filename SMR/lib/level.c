@@ -58,6 +58,7 @@ void load_Level(int level_id, Level *level, SDL_Renderer *renderer)
         free(tiles);
         return;
     }
+    SDL_SetTextureBlendMode(level->texture, SDL_BLENDMODE_BLEND);
     tilemaps = load_Tilemaps(renderer);
     SDL_SetRenderTarget(renderer, level->texture);
     for (int i = 0; i < nb_tile; i++)
@@ -66,7 +67,6 @@ void load_Level(int level_id, Level *level, SDL_Renderer *renderer)
     }
     destroy_Tilemaps(tilemaps);
     SDL_SetRenderTarget(renderer, NULL);
-    SDL_SetTextureBlendMode(level->texture, SDL_BLENDMODE_BLEND);
     free(tiles);
 
     // lecture des hitboxes

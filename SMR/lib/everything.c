@@ -29,6 +29,8 @@ void quit(Everything *all, int status)
 {
     /* liberation de la RAM allouee */
 
+    destroy_Level(&all->level);
+
     /* destruction du renderer et de la fenetre, fermetures de la TTF et de la SDL puis sortie du programme */
 
     if (NULL != all->renderer)
