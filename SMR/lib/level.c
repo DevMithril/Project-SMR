@@ -12,15 +12,74 @@ SDL_bool collision_Level(Hitbox *hitbox, Level *level)
     return SDL_FALSE;
 }
 
-void load_Level(FILE **file, Level *level, SDL_Renderer *renderer)
+SDL_Texture **load_Tilemaps(SDL_Renderer *renderer)
 {
-    level->texture = loadImage("assets/texture.bmp", renderer);
-    level->src.x = 0;
-    level->src.y = 0;
-    level->src.h = 240;
-    level->src.w = 320;
-    level->nb_hitboxes = 0;
+    SDL_Texture **tilemaps = malloc(sizeof(SDL_Texture*) * NB_TILEMAPS);
+    if (tilemaps == NULL && NB_TILEMAPS != 0)
+    {
+        fprintf(stderr, "load_Tilemaps : Out of Memory\n");
+        return NULL;
+    }
+    tilemaps[0] = loadImage("assets/tilemaps/grass.bmp", renderer);
+    return tilemaps;
+}
+
+void destroy_Tilemaps(SDL_Texture **tilemaps)
+{
+    for (int i = 0; i < NB_TILEMAPS; i++)
+    {
+        SDL_DestroyTexture(tilemaps[i]);
+    }
+    free(tilemaps);
+}
+
+void load_Level(int level_id, Level *level, SDL_Renderer *renderer)
+{
+    FILE *file = fopen("assets/levels/platform.dat", "rb");
+    int nb_tile;
+    Tile *tiles;
+    SDL_Texture **tilemaps;
+    fread(level, sizeof(Level), 1, file);
+    
+    // lecture des tiles et construction de la texture
+
+    fread(&nb_tile, sizeof(int), 1, file);
+    tiles = malloc(sizeof(Tile) * nb_tile);
+    if (tiles == NULL && nb_tile != 0)
+    {
+        fprintf(stderr, "load_Level : Out of Memory\n");
+        return;
+    }
+    fread(tiles, sizeof(Tile), nb_tile, file);
+    level->texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, level->size_x, level->size_y);
+    if(NULL == level->texture)
+    {
+        fprintf(stderr, "Erreur SDL_CreateTexture : %s\n", SDL_GetError());
+        free(tiles);
+        return;
+    }
+    tilemaps = load_Tilemaps(renderer);
+    SDL_SetRenderTarget(renderer, level->texture);
+    for (int i = 0; i < nb_tile; i++)
+    {
+        SDL_RenderCopy(renderer, tilemaps[tiles[i].tilemap_id], &tiles[i].src, &tiles[i].dst);
+    }
+    destroy_Tilemaps(tilemaps);
+    SDL_SetRenderTarget(renderer, NULL);
+    SDL_SetTextureBlendMode(level->texture, SDL_BLENDMODE_BLEND);
+    free(tiles);
+
+    // lecture des hitboxes
+
     level->hitboxes = NULL;
+    level->hitboxes = malloc(sizeof(Hitbox) * level->nb_hitboxes);
+    if (level->hitboxes == NULL && level->nb_hitboxes != 0)
+    {
+        fprintf(stderr, "load_Level : Out of Memory\n");
+        return;
+    }
+    fread(level->hitboxes, sizeof(Hitbox), level->nb_hitboxes, file);
+    fclose(file);
 }
 
 void destroy_Level(Level *level)

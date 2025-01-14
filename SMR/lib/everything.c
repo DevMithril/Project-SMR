@@ -1,5 +1,30 @@
 #include "everything.h"
 
+void loadGame(int id_save, Everything *all)
+{
+    load_Level(0, &all->level, all->renderer);
+}
+
+void runFrame(Everything *all)
+{
+    SDL_RenderClear(all->renderer);
+    switch (all->gamemode)
+    {
+    case MAIN_MENU :
+        loadGame(0, all);
+        all->gamemode = IN_GAME;
+        break;
+    case IN_GAME :
+        display_Level(&all->level, all->renderer);
+        break;
+    case PAUSE_MENU :
+        break;
+    default:
+        break;
+    };
+    SDL_RenderPresent(all->renderer);
+}
+
 void quit(Everything *all, int status)
 {
     /* liberation de la RAM allouee */

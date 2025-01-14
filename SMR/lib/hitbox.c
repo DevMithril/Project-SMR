@@ -72,16 +72,16 @@ void move_Hitbox(int x, int y, Hitbox *hitbox)
     }
 }
 
-void display_Hitbox(Hitbox *hitbox, SDL_Renderer *renderer)
+void display_Hitbox(Hitbox *hitbox, int offset_x, int offset_y, SDL_Renderer *renderer)
 {
     int i;
     SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
-    for (i = 0; i < NB_POINTS; i++)
+    for (i = 0; i < NB_POINTS-1; i++)
     {
-        SDL_RenderDrawLine(renderer, hitbox->points[i].x, hitbox->points[i].y,
-                                    hitbox->points[i+1].x, hitbox->points[i+1].y);
+        SDL_RenderDrawLine(renderer, hitbox->points[i].x + offset_x, hitbox->points[i].y + offset_y,
+                                    hitbox->points[i+1].x + offset_x, hitbox->points[i+1].y + offset_y);
     }
-    SDL_RenderDrawLine(renderer, hitbox->points[i].x, hitbox->points[i].y,
-                                hitbox->points[0].x, hitbox->points[0].y);
+    SDL_RenderDrawLine(renderer, hitbox->points[i].x + offset_x, hitbox->points[i].y + offset_y,
+                                hitbox->points[0].x + offset_x, hitbox->points[0].y + offset_y);
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
 }

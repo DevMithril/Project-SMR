@@ -18,6 +18,6 @@ SDL_bool sat(Hitbox *hitbox1, Hitbox *hitbox2);
 void move_Hitbox(int x, int y, Hitbox *hitbox);
 
 /* permet d'afficher une hitbox */
-void display_Hitbox(Hitbox *hitbox, SDL_Renderer *renderer);
+void display_Hitbox(Hitbox *hitbox, int offset_x, int offset_y, SDL_Renderer *renderer);
 
 #endif

@@ -1,3 +1,5 @@
 Will you find the meaning of the SMR accronym ?
 
-linux compilation : gcc -o SMR lib/*.c -lm $(sdl2-config --cflags --libs) -l SDL2_ttf
+SMR linux compilation : gcc -o SMR lib/*.c -lm $(sdl2-config --cflags --libs) -l SDL2_ttf
+
+Level Editor linux compilation : gcc -o LevelEditor level_editor/*.c lib/level.c lib/hitbox.c -lm $(sdl2-config --cflags --libs) -l SDL2_ttf
