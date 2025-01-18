@@ -28,11 +28,14 @@ void destroy_Player(Player *player)
 void move_Player(int x, int y, Player *player, Level *level)
 {
     SDL_bool osef, move_x, move_y, mid_x = (player->dst.x + player->dst.w / 2 == 160), mid_y = (player->dst.y + player->dst.h / 2 == 120);
+    Vector2 mtv = {.x = 0, .y = 0};
     move_Hitbox(x, y, &player->hitbox);
-    if (collision_Level(&player->hitbox, level))
+    mtv = collision_Level(&player->hitbox, level);
+    if (mtv.x != 0 || mtv.y != 0)
     {
-        move_Hitbox(-x, -y, &player->hitbox);
-        return;
+        move_Hitbox(mtv.x, mtv.y, &player->hitbox);
+        x += mtv.x;
+        y += mtv.y;
     }
     if (mid_x)
     {

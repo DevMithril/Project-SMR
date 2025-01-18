@@ -3,8 +3,14 @@
 #include <SDL2/SDL.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <math.h>
 
 #define NB_POINTS 4
+
+typedef struct Vector2
+{
+    double x, y;
+}Vector2;
 
 typedef struct Hitbox
 {
@@ -12,7 +18,7 @@ typedef struct Hitbox
 }Hitbox;
 
 /* renvoie SDL_TRUE si les deux hitboxes sont en collision, SDL_FALSE sinon */
-SDL_bool sat(Hitbox *hitbox1, Hitbox *hitbox2);
+Vector2 sat(Hitbox *hitbox1, Hitbox *hitbox2);
 
 /* permet de déplacer une hitbox */
 void move_Hitbox(int x, int y, Hitbox *hitbox);

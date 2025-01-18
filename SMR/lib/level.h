@@ -24,7 +24,7 @@ typedef struct Level
 }Level;
 
 /* renvoie SDL_TRUE si la hitbox est en collision avec le level, SDL_FALSE sinon */
-SDL_bool collision_Level(Hitbox *hitbox, Level *level);
+Vector2 collision_Level(Hitbox *hitbox, Level *level);
 
 /* charge les tilemaps */
 SDL_Texture **load_Tilemaps(SDL_Renderer *renderer);
@@ -39,7 +39,7 @@ void load_Level(int level_id, Level *level, SDL_Renderer *renderer);
 void destroy_Level(Level *level);
 
 /* permet de déplacer la caméra */
-void move_cam_Level(int x, int y, SDL_bool *bool_x, SDL_bool *bool_y, Level *level);
+void move_cam_Level(int x, int y, SDL_bool *updated_x, SDL_bool *updated_y, Level *level);
 
 /* permet d'afficher un level */
 void display_Level(Level *level, SDL_Renderer *renderer);

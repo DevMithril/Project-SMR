@@ -1,15 +1,18 @@
 #include "level.h"
 
-SDL_bool collision_Level(Hitbox *hitbox, Level *level)
+Vector2 collision_Level(Hitbox *hitbox, Level *level)
 {
+    Vector2 null = {.x = 0, .y = 0};
+    Vector2 mtv = null;
     for (int i = 0; i < level->nb_hitboxes; i++)
     {
-        if (sat(hitbox, &level->hitboxes[i]))
+        mtv = sat(hitbox, &level->hitboxes[i]);
+        if (mtv.x != 0 || mtv.y != 0)
         {
-            return SDL_TRUE;
+            return mtv;
         }
     }
-    return SDL_FALSE;
+    return null;
 }
 
 SDL_Texture **load_Tilemaps(SDL_Renderer *renderer)
@@ -94,31 +97,31 @@ void destroy_Level(Level *level)
     }
 }
 
-void move_cam_Level(int x, int y, SDL_bool *bool_x, SDL_bool *bool_y, Level *level)
+void move_cam_Level(int x, int y, SDL_bool *updated_x, SDL_bool *updated_y, Level *level)
 {
     level->src.x += x;
     level->src.y += y;
-    *bool_x = SDL_TRUE;
-    *bool_y = SDL_TRUE;
+    *updated_x = SDL_TRUE;
+    *updated_y = SDL_TRUE;
     if (level->src.x < 0)
     {
         level->src.x = 0;
-        *bool_x = SDL_FALSE;
+        *updated_x = SDL_FALSE;
     }
     if (level->src.y < 0)
     {
         level->src.y = 0;
-        *bool_y = SDL_FALSE;
+        *updated_y = SDL_FALSE;
     }
     if (level->src.x > level->size_x - level->src.w)
     {
         level->src.x = level->size_x - level->src.w;
-        *bool_x = SDL_FALSE;
+        *updated_x = SDL_FALSE;
     }
     if (level->src.y > level->size_y - level->src.h)
     {
         level->src.y = level->size_y - level->src.h;
-        *bool_y = SDL_FALSE;
+        *updated_y = SDL_FALSE;
     }
 }
 
