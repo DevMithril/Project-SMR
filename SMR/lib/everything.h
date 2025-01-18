@@ -7,6 +7,7 @@
 #include <SDL2/SDL_ttf.h>
 #include "input.h"
 #include "level.h"
+#include "player.h"
 
 typedef enum Gamemode
 {
@@ -25,6 +26,7 @@ typedef struct Everything
 {
     Context context;
     Level level;
+    Player player;
     Input input;
     Gamemode gamemode;
     SDL_Renderer *renderer;

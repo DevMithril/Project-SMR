@@ -94,10 +94,32 @@ void destroy_Level(Level *level)
     }
 }
 
-void move_cam_Level(int x, int y, Level *level)
+void move_cam_Level(int x, int y, SDL_bool *bool_x, SDL_bool *bool_y, Level *level)
 {
     level->src.x += x;
     level->src.y += y;
+    *bool_x = SDL_TRUE;
+    *bool_y = SDL_TRUE;
+    if (level->src.x < 0)
+    {
+        level->src.x = 0;
+        *bool_x = SDL_FALSE;
+    }
+    if (level->src.y < 0)
+    {
+        level->src.y = 0;
+        *bool_y = SDL_FALSE;
+    }
+    if (level->src.x > level->size_x - level->src.w)
+    {
+        level->src.x = level->size_x - level->src.w;
+        *bool_x = SDL_FALSE;
+    }
+    if (level->src.y > level->size_y - level->src.h)
+    {
+        level->src.y = level->size_y - level->src.h;
+        *bool_y = SDL_FALSE;
+    }
 }
 
 void display_Level(Level *level, SDL_Renderer *renderer)

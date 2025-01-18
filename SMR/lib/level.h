@@ -32,14 +32,14 @@ SDL_Texture **load_Tilemaps(SDL_Renderer *renderer);
 /* libère la mémoire allouée pour les tilemaps */
 void destroy_Tilemaps(SDL_Texture **tilemaps);
 
-/* permet d'allouer un level à partir de données présentes dans un fichier ; renvoie NULL en cas d'erreur */
+/* permet d'allouer un level à partir de son id ; renvoie NULL en cas d'erreur */
 void load_Level(int level_id, Level *level, SDL_Renderer *renderer);
 
 /* permet de libérer la mémoire allouée pour un level */
 void destroy_Level(Level *level);
 
 /* permet de déplacer la caméra */
-void move_cam_Level(int x, int y, Level *level);
+void move_cam_Level(int x, int y, SDL_bool *bool_x, SDL_bool *bool_y, Level *level);
 
 /* permet d'afficher un level */
 void display_Level(Level *level, SDL_Renderer *renderer);

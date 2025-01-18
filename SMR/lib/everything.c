@@ -3,6 +3,8 @@
 void loadGame(int id_save, Everything *all)
 {
     load_Level(0, &all->level, all->renderer);
+    load_Player(&all->player, all->renderer);
+    load_Input(&all->input);
 }
 
 void runFrame(Everything *all)
@@ -15,7 +17,7 @@ void runFrame(Everything *all)
         all->gamemode = IN_GAME;
         break;
     case IN_GAME :
-        display_Level(&all->level, all->renderer);
+        update_Game(&all->player, &all->input, &all->level, all->renderer);
         break;
     case PAUSE_MENU :
         break;
@@ -30,6 +32,7 @@ void quit(Everything *all, int status)
     /* liberation de la RAM allouee */
 
     destroy_Level(&all->level);
+    destroy_Player(&all->player);
 
     /* destruction du renderer et de la fenetre, fermetures de la TTF et de la SDL puis sortie du programme */
 

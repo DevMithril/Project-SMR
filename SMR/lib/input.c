@@ -28,3 +28,11 @@ void resetKeyState_Input(SDL_Scancode key, Input *input)
 {
     input->key[key] = SDL_FALSE;
 }
+
+void load_Input(Input *input)
+{
+    input->key_down = SDL_GetScancodeFromKey(SDLK_j);
+    input->key_up = SDL_GetScancodeFromKey(SDLK_u);
+    input->key_right = SDL_GetScancodeFromKey(SDLK_k);
+    input->key_left = SDL_GetScancodeFromKey(SDLK_h);
+}

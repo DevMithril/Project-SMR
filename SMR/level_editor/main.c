@@ -73,6 +73,12 @@ void quit(Everything *all, int status)
     exit(status);
 }
 
+void move_cam_level(int x, int y, Level *level)
+{
+    level->src.x += x;
+    level->src.y += y;
+}
+
 void display_LevelEdit(Everything *all)
 {
     SDL_Rect src, dst;
@@ -186,7 +192,7 @@ void load_level(Everything *all)
 
     all->cur_level.tile_src_dst.x = all->level.src.x;
     all->cur_level.tile_src_dst.y = all->level.src.y;
-    move_cam_Level(-144, -112, &all->level);
+    move_cam_level(-144, -112, &all->level);
 }
 
 void save_level(Everything *all)
@@ -458,25 +464,25 @@ void run_levelFrame(Everything *all)
 {
     if (all->input.down)
     {
-        move_cam_Level(0, 16, &all->level);
+        move_cam_level(0, 16, &all->level);
         all->cur_level.tile_src_dst.y += 16;
         resetKeyState_Input(all->input.key_down, &all->input);
     }
     if (all->input.up)
     {
-        move_cam_Level(0, -16, &all->level);
+        move_cam_level(0, -16, &all->level);
         all->cur_level.tile_src_dst.y -= 16;
         resetKeyState_Input(all->input.key_up, &all->input);
     }
     if (all->input.right)
     {
-        move_cam_Level(16, 0, &all->level);
+        move_cam_level(16, 0, &all->level);
         all->cur_level.tile_src_dst.x += 16;
         resetKeyState_Input(all->input.key_right, &all->input);
     }
     if (all->input.left)
     {
-        move_cam_Level(-16, 0, &all->level);
+        move_cam_level(-16, 0, &all->level);
         all->cur_level.tile_src_dst.x -= 16;
         resetKeyState_Input(all->input.key_left, &all->input);
     }
@@ -519,25 +525,25 @@ void run_hitboxFrame(Everything *all)
 {
     if (all->input.down)
     {
-        move_cam_Level(0, 16, &all->level);
+        move_cam_level(0, 16, &all->level);
         all->cur_hitbox.tile_src_dst.y += 16;
         resetKeyState_Input(all->input.key_down, &all->input);
     }
     if (all->input.up)
     {
-        move_cam_Level(0, -16, &all->level);
+        move_cam_level(0, -16, &all->level);
         all->cur_hitbox.tile_src_dst.y -= 16;
         resetKeyState_Input(all->input.key_up, &all->input);
     }
     if (all->input.right)
     {
-        move_cam_Level(16, 0, &all->level);
+        move_cam_level(16, 0, &all->level);
         all->cur_hitbox.tile_src_dst.x += 16;
         resetKeyState_Input(all->input.key_right, &all->input);
     }
     if (all->input.left)
     {
-        move_cam_Level(-16, 0, &all->level);
+        move_cam_level(-16, 0, &all->level);
         all->cur_hitbox.tile_src_dst.x -= 16;
         resetKeyState_Input(all->input.key_left, &all->input);
     }

@@ -18,4 +18,7 @@ void update_Input(Input *input);
 /* force une key à SDL_FALSE */
 void resetKeyState_Input(SDL_Scancode key, Input *input);
 
+/* charge les controles dans la structure Input */
+void load_Input(Input *input);
+
 #endif
