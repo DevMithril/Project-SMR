@@ -6,4 +6,6 @@
 
 SDL_Texture *loadImage(const char chemin[], SDL_Renderer *renderer);
 
+void render_Texture(SDL_Renderer *renderer, SDL_Texture *texture, SDL_Rect *src, SDL_Rect *dst);
+
 #endif

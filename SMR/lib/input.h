@@ -8,8 +8,8 @@ typedef struct Input
 {
     SDL_bool key[SDL_NUM_SCANCODES];
     SDL_bool quit;
-    SDL_Scancode key_up, key_down, key_left, key_right;
-    SDL_bool up, down, left, right;
+    SDL_Scancode key_up, key_down, key_left, key_right, key_jump;
+    SDL_bool up, down, left, right, jump;
 }Input;
 
 /* met à jour la structure input */

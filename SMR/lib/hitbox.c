@@ -107,6 +107,34 @@ Vector2 sat(Hitbox *hitbox1, Hitbox *hitbox2)
     return smallest;
 }
 
+float abs_value(float n)
+{
+    if (n < 0)
+    {
+        return -n;
+    }
+    return n;
+}
+
+Vector2 sat_bulk(Hitbox *hitbox, Hitbox *hitbox_array, int array_range)
+{
+    Vector2 mtv_max = {.x = 0, .y = 0};
+    Vector2 mtv;
+    for (int i = 0; i < array_range; i++)
+    {
+        mtv = sat(hitbox, &hitbox_array[i]);
+        if (abs_value(mtv.x) > abs_value(mtv_max.x))
+        {
+            mtv_max.x = mtv.x;
+        }
+        if (abs_value(mtv.y) > abs_value(mtv_max.y))
+        {
+            mtv_max.y = mtv.y;
+        }
+    }
+    return mtv_max;
+}
+
 void move_Hitbox(int x, int y, Hitbox *hitbox)
 {
     for (int i = 0; i < NB_POINTS; i++)
@@ -116,10 +144,10 @@ void move_Hitbox(int x, int y, Hitbox *hitbox)
     }
 }
 
-void display_Hitbox(Hitbox *hitbox, int offset_x, int offset_y, SDL_Renderer *renderer)
+void display_Hitbox(Hitbox *hitbox, int offset_x, int offset_y, int r, int g, int b, SDL_Renderer *renderer)
 {
     int i;
-    SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
+    SDL_SetRenderDrawColor(renderer, r, g, b, 255);
     for (i = 0; i < NB_POINTS-1; i++)
     {
         SDL_RenderDrawLine(renderer, hitbox->points[i].x + offset_x, hitbox->points[i].y + offset_y,

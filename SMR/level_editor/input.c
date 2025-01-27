@@ -6,7 +6,7 @@ void loadKeys(Input *input)
     input->key_up = SDL_GetScancodeFromKey(SDLK_u);
     input->key_right = SDL_GetScancodeFromKey(SDLK_k);
     input->key_left = SDL_GetScancodeFromKey(SDLK_h);
-    input->key_switch_cursor = SDL_GetScancodeFromKey(SDLK_a);
+    input->key_switch = SDL_GetScancodeFromKey(SDLK_a);
     input->key_tilemap_add = SDL_GetScancodeFromKey(SDLK_r);
     input->key_tilemap_sub = SDL_GetScancodeFromKey(SDLK_e);
     input->key_erase = SDL_GetScancodeFromKey(SDLK_z);
@@ -37,7 +37,7 @@ void update_Input(Input *input)
     input->left = input->key[input->key_left];
     input->right = input->key[input->key_right];
     input->up = input->key[input->key_up];
-    input->switch_cursor = input->key[input->key_switch_cursor];
+    input->switch_ = input->key[input->key_switch];
     input->tilemap_add = input->key[input->key_tilemap_add];
     input->tilemap_sub = input->key[input->key_tilemap_sub];
     input->erase = input->key[input->key_erase];

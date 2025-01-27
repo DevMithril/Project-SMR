@@ -22,6 +22,7 @@ void update_Input(Input *input)
     input->left = input->key[input->key_left];
     input->right = input->key[input->key_right];
     input->up = input->key[input->key_up];
+    input->jump = input->key[input->key_jump];
 }
 
 void resetKeyState_Input(SDL_Scancode key, Input *input)
@@ -35,4 +36,5 @@ void load_Input(Input *input)
     input->key_up = SDL_GetScancodeFromKey(SDLK_u);
     input->key_right = SDL_GetScancodeFromKey(SDLK_k);
     input->key_left = SDL_GetScancodeFromKey(SDLK_h);
+    input->key_jump = SDL_GetScancodeFromKey(SDLK_SPACE);
 }

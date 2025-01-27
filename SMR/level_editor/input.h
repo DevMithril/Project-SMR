@@ -8,8 +8,8 @@ typedef struct Input
 {
     SDL_bool key[SDL_NUM_SCANCODES];
     SDL_bool quit;
-    SDL_Scancode key_up, key_down, key_left, key_right, key_switch_cursor, key_tilemap_add, key_tilemap_sub, key_erase, key_draw, key_save, key_toggle_hitbox;
-    SDL_bool up, down, left, right, switch_cursor, tilemap_add, tilemap_sub, erase, draw, save, toggle_hitbox;
+    SDL_Scancode key_up, key_down, key_left, key_right, key_switch, key_tilemap_add, key_tilemap_sub, key_erase, key_draw, key_save, key_toggle_hitbox;
+    SDL_bool up, down, left, right, switch_, tilemap_add, tilemap_sub, erase, draw, save, toggle_hitbox;
 }Input;
 
 /* charge les scancodes des touches de control */

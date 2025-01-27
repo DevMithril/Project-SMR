@@ -6,7 +6,7 @@
 #include "hitbox.h"
 #include "texture.h"
 
-#define NB_TILEMAPS 1
+#define NB_TILEMAPS 16
 
 typedef struct Tile
 {
@@ -19,12 +19,9 @@ typedef struct Level
     SDL_Rect src;
     SDL_Texture *texture;
     int size_x, size_y;
-    int nb_hitboxes;
-    Hitbox *hitboxes;
+    int nb_hitboxes, cam_nb_hitboxes;
+    Hitbox *hitboxes, *cam_hitboxes;
 }Level;
-
-/* renvoie SDL_TRUE si la hitbox est en collision avec le level, SDL_FALSE sinon */
-Vector2 collision_Level(Hitbox *hitbox, Level *level);
 
 /* charge les tilemaps */
 SDL_Texture **load_Tilemaps(SDL_Renderer *renderer);
@@ -38,8 +35,8 @@ void load_Level(int level_id, Level *level, SDL_Renderer *renderer);
 /* permet de libérer la mémoire allouée pour un level */
 void destroy_Level(Level *level);
 
-/* permet de déplacer la caméra */
-void move_cam_Level(int x, int y, SDL_bool *updated_x, SDL_bool *updated_y, Level *level);
+/* permet de déplacer la caméra, renvoie le vecteur à appliquer au player pour maintenir la correlation entre physique et affichage */
+Vector2 move_cam_Level(int x, int y, Level *level);
 
 /* permet d'afficher un level */
 void display_Level(Level *level, SDL_Renderer *renderer);

@@ -12,7 +12,8 @@ typedef enum Mode
     SETUP,
     TILEMAP,
     LEVEL,
-    HITBOX
+    HITBOX,
+    HITBOX_CAM
 }Mode;
 
 typedef struct Cursor
@@ -90,7 +91,7 @@ void display_LevelEdit(Everything *all)
         dst.y -= all->level.src.y;
         if (dst.x >= 320 && dst.x <= 2*320 - 16 && dst.y >= 0 && dst.y <= 240 - 16)
         {
-            SDL_RenderCopy(all->renderer, all->tilemap_array[all->tile_array[i].tilemap_id], &src, &dst);
+            render_Texture(all->renderer, all->tilemap_array[all->tile_array[i].tilemap_id], &src, &dst);
         }
     }
 }
@@ -180,6 +181,7 @@ void load_level(Everything *all)
         return;
     }
     fread(all->tile_array, sizeof(Tile), all->nb_tiles, file);
+    
     all->level.hitboxes = malloc(sizeof(Hitbox) * all->level.nb_hitboxes);
     if (all->level.hitboxes == NULL && all->level.nb_hitboxes != 0)
     {
@@ -187,6 +189,14 @@ void load_level(Everything *all)
         return;
     }
     fread(all->level.hitboxes, sizeof(Hitbox), all->level.nb_hitboxes, file);
+
+    all->level.cam_hitboxes = malloc(sizeof(Hitbox) * all->level.cam_nb_hitboxes);
+    if (all->level.cam_hitboxes == NULL && all->level.cam_nb_hitboxes != 0)
+    {
+        fprintf(stderr, "load_level : Out of Memory\n");
+        return;
+    }
+    fread(all->level.cam_hitboxes, sizeof(Hitbox), all->level.cam_nb_hitboxes, file);
 
     fclose(file);
 
@@ -203,6 +213,11 @@ void save_level(Everything *all)
 
     printf("Ecrire le chemin du fichier à sauvegarder : ");
     scanf(" %s", file_path);
+    if (!strcmp(file_path, "none"))
+    {
+        all->input.quit = SDL_TRUE;
+        return;
+    }
     
     file = fopen(file_path, "wb");
     if (file == NULL)
@@ -252,10 +267,15 @@ void save_level(Everything *all)
     {
         move_Hitbox(-min_x, -min_y, &all->level.hitboxes[i]);
     }
+    for (int i = 0; i < all->level.cam_nb_hitboxes; i++)
+    {
+        move_Hitbox(-min_x, -min_y, &all->level.cam_hitboxes[i]);
+    }
     fwrite(&all->level, sizeof(Level), 1, file);
     fwrite(&all->nb_tiles, sizeof(int), 1, file);
     fwrite(all->tile_array, sizeof(Tile), all->nb_tiles, file);
     fwrite(all->level.hitboxes, sizeof(Hitbox), all->level.nb_hitboxes, file);
+    fwrite(all->level.cam_hitboxes, sizeof(Hitbox), all->level.cam_nb_hitboxes, file);
 
     fclose(file);
 
@@ -332,6 +352,43 @@ void edit_hitbox(Everything *all)
     }
 }
 
+void edit_hitbox_cam(Everything *all)
+{
+    SDL_bool destroy = SDL_FALSE;
+    if (all->input.erase)
+    {
+        for (int i = 0; i < all->level.cam_nb_hitboxes; i++)
+        {
+            if (destroy)
+            {
+                all->level.cam_hitboxes[i-1] = all->level.cam_hitboxes[i];
+            }
+            if (all->cur_hitbox.tile_src_dst.x == all->level.cam_hitboxes[i].points[0].x && all->cur_hitbox.tile_src_dst.y == all->level.cam_hitboxes[i].points[0].y)
+            {
+                destroy = SDL_TRUE;
+            }
+        }
+        if (destroy)
+        {
+            all->level.cam_nb_hitboxes -= 1;
+        }
+    }
+    if (all->input.draw)
+    {
+        all->hitbox_edit.points[all->cur_point_indice].x = all->cur_hitbox.tile_src_dst.x;
+        all->hitbox_edit.points[all->cur_point_indice].y = all->cur_hitbox.tile_src_dst.y;
+        all->cur_point_indice += 1;
+        if (all->cur_point_indice == 4)
+        {
+            all->cur_point_indice = 0;
+            all->level.cam_nb_hitboxes += 1;
+            all->level.cam_hitboxes = realloc(all->level.cam_hitboxes, sizeof(Hitbox) * all->level.cam_nb_hitboxes);
+            all->level.cam_hitboxes[all->level.cam_nb_hitboxes - 1] = all->hitbox_edit;
+        }
+        resetKeyState_Input(all->input.key_draw, &all->input);
+    }
+}
+
 void load_Setup(Everything *all)
 {
     loadKeys(&all->input);
@@ -344,6 +401,8 @@ void load_Setup(Everything *all)
     all->cur_point_indice = 0;
     all->level.nb_hitboxes = 0;
     all->level.hitboxes = NULL;
+    all->level.cam_nb_hitboxes = 0;
+    all->level.cam_hitboxes = NULL;
     all->level.size_x = 0;
     all->level.size_y = 0;
     all->level.texture = NULL;
@@ -427,10 +486,10 @@ void run_tilemapFrame(Everything *all)
         }
         resetKeyState_Input(all->input.key_tilemap_sub, &all->input);
     }
-    if (all->input.switch_cursor)
+    if (all->input.switch_)
     {
         all->mode = LEVEL;
-        resetKeyState_Input(all->input.key_switch_cursor, &all->input);
+        resetKeyState_Input(all->input.key_switch, &all->input);
     }
     if (all->input.toggle_hitbox)
     {
@@ -440,19 +499,10 @@ void run_tilemapFrame(Everything *all)
     }
 
     SDL_Rect dst_tilemap = {.h = 480, .w = 320, .x = 0, .y = 0};
-    if (all->tilemap_array != NULL)
-    {
-        SDL_RenderCopy(all->renderer, all->tilemap_array[all->cur_tilemap_indice], NULL, &dst_tilemap);
-    }
+    render_Texture(all->renderer, all->tilemap_array[all->cur_tilemap_indice], NULL, &dst_tilemap);
     display_LevelEdit(all);
-    if (all->cur_tilemap.texture_active != NULL)
-    {
-        SDL_RenderCopy(all->renderer, all->cur_tilemap.texture_active, NULL, &all->cur_tilemap.dst);
-    }
-    if (all->cur_level.texture_inactive != NULL)
-    {
-        SDL_RenderCopy(all->renderer, all->cur_level.texture_inactive, NULL, &all->cur_level.dst);
-    }
+    render_Texture(all->renderer, all->cur_tilemap.texture_active, NULL, &all->cur_tilemap.dst);
+    render_Texture(all->renderer, all->cur_level.texture_inactive, NULL, &all->cur_level.dst);
 
     if (all->input.save)
     {
@@ -488,10 +538,10 @@ void run_levelFrame(Everything *all)
     }
 
     edit_level(all);
-    if (all->input.switch_cursor)
+    if (all->input.switch_)
     {
         all->mode = TILEMAP;
-        resetKeyState_Input(all->input.key_switch_cursor, &all->input);
+        resetKeyState_Input(all->input.key_switch, &all->input);
     }
     if (all->input.toggle_hitbox)
     {
@@ -501,19 +551,10 @@ void run_levelFrame(Everything *all)
     }
 
     SDL_Rect dst_tilemap = {.h = 480, .w = 320, .x = 0, .y = 0};
-    if (all->tilemap_array != NULL)
-    {
-        SDL_RenderCopy(all->renderer, all->tilemap_array[all->cur_tilemap_indice], NULL, &dst_tilemap);
-    }
+    render_Texture(all->renderer, all->tilemap_array[all->cur_tilemap_indice], NULL, &dst_tilemap);
     display_LevelEdit(all);
-    if (all->cur_tilemap.texture_inactive != NULL)
-    {
-        SDL_RenderCopy(all->renderer, all->cur_tilemap.texture_inactive, NULL, &all->cur_tilemap.dst);
-    }
-    if (all->cur_level.texture_active != NULL)
-    {
-        SDL_RenderCopy(all->renderer, all->cur_level.texture_active, NULL, &all->cur_level.dst);
-    }
+    render_Texture(all->renderer, all->cur_tilemap.texture_inactive, NULL, &all->cur_tilemap.dst);
+    render_Texture(all->renderer, all->cur_level.texture_active, NULL, &all->cur_level.dst);
 
     if (all->input.save)
     {
@@ -552,14 +593,22 @@ void run_hitboxFrame(Everything *all)
     if (all->input.toggle_hitbox)
     {
         all->mode = LEVEL;
+        all->cur_point_indice = 0;
         all->cur_level.tile_src_dst = all->cur_hitbox.tile_src_dst;
         resetKeyState_Input(all->input.key_toggle_hitbox, &all->input);
+    }
+
+    if (all->input.switch_)
+    {
+        all->mode = HITBOX_CAM;
+        all->cur_point_indice = 0;
+        resetKeyState_Input(all->input.key_switch, &all->input);
     }
 
     display_LevelEdit(all);
     for (int i = 0; i < all->level.nb_hitboxes; i++)
     {
-        display_Hitbox(&all->level.hitboxes[i], 320 - all->level.src.x, - all->level.src.y, all->renderer);
+        display_Hitbox(&all->level.hitboxes[i], 320 - all->level.src.x, - all->level.src.y, 255, 0, 0, all->renderer);
     }
     SDL_SetRenderDrawColor(all->renderer, 255, 0, 0, 255);
     for (int i = 0; i < all->cur_point_indice-1; i++)
@@ -568,10 +617,70 @@ void run_hitboxFrame(Everything *all)
                             all->hitbox_edit.points[i+1].x - all->level.src.x + 320, all->hitbox_edit.points[i+1].y - all->level.src.y);
     }
     SDL_SetRenderDrawColor(all->renderer, 0, 0, 0, 255);
-    if (all->cur_hitbox.texture_active != NULL)
+    render_Texture(all->renderer, all->cur_hitbox.texture_active, NULL, &all->cur_hitbox.dst);
+
+    if (all->input.save)
     {
-        SDL_RenderCopy(all->renderer, all->cur_hitbox.texture_active, NULL, &all->cur_hitbox.dst);
+        save_level(all);
     }
+}
+
+void run_hitboxcamFrame(Everything *all)
+{
+    if (all->input.down)
+    {
+        move_cam_level(0, 16, &all->level);
+        all->cur_hitbox.tile_src_dst.y += 16;
+        resetKeyState_Input(all->input.key_down, &all->input);
+    }
+    if (all->input.up)
+    {
+        move_cam_level(0, -16, &all->level);
+        all->cur_hitbox.tile_src_dst.y -= 16;
+        resetKeyState_Input(all->input.key_up, &all->input);
+    }
+    if (all->input.right)
+    {
+        move_cam_level(16, 0, &all->level);
+        all->cur_hitbox.tile_src_dst.x += 16;
+        resetKeyState_Input(all->input.key_right, &all->input);
+    }
+    if (all->input.left)
+    {
+        move_cam_level(-16, 0, &all->level);
+        all->cur_hitbox.tile_src_dst.x -= 16;
+        resetKeyState_Input(all->input.key_left, &all->input);
+    }
+
+    edit_hitbox_cam(all);
+    if (all->input.toggle_hitbox)
+    {
+        all->mode = LEVEL;
+        all->cur_point_indice = 0;
+        all->cur_level.tile_src_dst = all->cur_hitbox.tile_src_dst;
+        resetKeyState_Input(all->input.key_toggle_hitbox, &all->input);
+    }
+
+    if (all->input.switch_)
+    {
+        all->mode = HITBOX;
+        all->cur_point_indice = 0;
+        resetKeyState_Input(all->input.key_switch, &all->input);
+    }
+
+    display_LevelEdit(all);
+    for (int i = 0; i < all->level.cam_nb_hitboxes; i++)
+    {
+        display_Hitbox(&all->level.cam_hitboxes[i], 320 - all->level.src.x, - all->level.src.y, 0, 255, 255, all->renderer);
+    }
+    SDL_SetRenderDrawColor(all->renderer, 0, 255, 255, 255);
+    for (int i = 0; i < all->cur_point_indice-1; i++)
+    {
+        SDL_RenderDrawLine(all->renderer, all->hitbox_edit.points[i].x - all->level.src.x + 320, all->hitbox_edit.points[i].y - all->level.src.y,
+                            all->hitbox_edit.points[i+1].x - all->level.src.x + 320, all->hitbox_edit.points[i+1].y - all->level.src.y);
+    }
+    SDL_SetRenderDrawColor(all->renderer, 0, 0, 0, 255);
+    render_Texture(all->renderer, all->cur_hitbox.texture_active, NULL, &all->cur_hitbox.dst);
 
     if (all->input.save)
     {
@@ -595,6 +704,9 @@ void runFrame(Everything *all)
         break;
     case HITBOX :
         run_hitboxFrame(all);
+        break;
+    case HITBOX_CAM :
+        run_hitboxcamFrame(all);
         break;
     };
     SDL_RenderPresent(all->renderer);

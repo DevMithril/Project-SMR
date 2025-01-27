@@ -1,20 +1,5 @@
 #include "level.h"
 
-Vector2 collision_Level(Hitbox *hitbox, Level *level)
-{
-    Vector2 null = {.x = 0, .y = 0};
-    Vector2 mtv = null;
-    for (int i = 0; i < level->nb_hitboxes; i++)
-    {
-        mtv = sat(hitbox, &level->hitboxes[i]);
-        if (mtv.x != 0 || mtv.y != 0)
-        {
-            return mtv;
-        }
-    }
-    return null;
-}
-
 SDL_Texture **load_Tilemaps(SDL_Renderer *renderer)
 {
     SDL_Texture **tilemaps = malloc(sizeof(SDL_Texture*) * NB_TILEMAPS);
@@ -24,6 +9,21 @@ SDL_Texture **load_Tilemaps(SDL_Renderer *renderer)
         return NULL;
     }
     tilemaps[0] = loadImage("assets/tilemaps/grass.bmp", renderer);
+    tilemaps[1] = loadImage("assets/tilemaps/MF_AQA.bmp", renderer);
+    tilemaps[2] = loadImage("assets/tilemaps/MF_ARC.bmp", renderer);
+    tilemaps[3] = loadImage("assets/tilemaps/MF_COM.bmp", renderer);
+    tilemaps[4] = loadImage("assets/tilemaps/MF_MAIN.bmp", renderer);
+    tilemaps[5] = loadImage("assets/tilemaps/MF_NOC.bmp", renderer);
+    tilemaps[6] = loadImage("assets/tilemaps/MF_PYR.bmp", renderer);
+    tilemaps[7] = loadImage("assets/tilemaps/MF_SRX.bmp", renderer);
+    tilemaps[8] = loadImage("assets/tilemaps/MF_TRO.bmp", renderer);
+    tilemaps[9] = loadImage("assets/tilemaps/MZM_brinstar.bmp", renderer);
+    tilemaps[10] = loadImage("assets/tilemaps/MZM_chozodia.bmp", renderer);
+    tilemaps[11] = loadImage("assets/tilemaps/MZM_crateria.bmp", renderer);
+    tilemaps[12] = loadImage("assets/tilemaps/MZM_kraid.bmp", renderer);
+    tilemaps[13] = loadImage("assets/tilemaps/MZM_norfair.bmp", renderer);
+    tilemaps[14] = loadImage("assets/tilemaps/MZM_ridley.bmp", renderer);
+    tilemaps[15] = loadImage("assets/tilemaps/MZM_tourian.bmp", renderer);
     return tilemaps;
 }
 
@@ -82,6 +82,16 @@ void load_Level(int level_id, Level *level, SDL_Renderer *renderer)
         return;
     }
     fread(level->hitboxes, sizeof(Hitbox), level->nb_hitboxes, file);
+    
+    level->cam_hitboxes = NULL;
+    level->cam_hitboxes = malloc(sizeof(Hitbox) * level->cam_nb_hitboxes);
+    if (level->cam_hitboxes == NULL && level->cam_nb_hitboxes != 0)
+    {
+        fprintf(stderr, "load_Level : Out of Memory\n");
+        return;
+    }
+    fread(level->cam_hitboxes, sizeof(Hitbox), level->cam_nb_hitboxes, file);
+
     fclose(file);
 }
 
@@ -95,40 +105,35 @@ void destroy_Level(Level *level)
     {
         free(level->hitboxes);
     }
+    if (level->cam_hitboxes != NULL)
+    {
+        free(level->cam_hitboxes);
+    }
 }
 
-void move_cam_Level(int x, int y, SDL_bool *updated_x, SDL_bool *updated_y, Level *level)
+Vector2 move_cam_Level(int x, int y, Level *level)
 {
+    Vector2 mtv;
+    Hitbox cam;
     level->src.x += x;
     level->src.y += y;
-    *updated_x = SDL_TRUE;
-    *updated_y = SDL_TRUE;
-    if (level->src.x < 0)
-    {
-        level->src.x = 0;
-        *updated_x = SDL_FALSE;
-    }
-    if (level->src.y < 0)
-    {
-        level->src.y = 0;
-        *updated_y = SDL_FALSE;
-    }
-    if (level->src.x > level->size_x - level->src.w)
-    {
-        level->src.x = level->size_x - level->src.w;
-        *updated_x = SDL_FALSE;
-    }
-    if (level->src.y > level->size_y - level->src.h)
-    {
-        level->src.y = level->size_y - level->src.h;
-        *updated_y = SDL_FALSE;
-    }
+    cam.points[0].x = level->src.x;
+    cam.points[0].y = level->src.y;
+    cam.points[1].x = level->src.x + level->src.w;
+    cam.points[1].y = level->src.y;
+    cam.points[2].x = level->src.x + level->src.w;
+    cam.points[2].y = level->src.y + level->src.h;
+    cam.points[3].x = level->src.x;
+    cam.points[3].y = level->src.y + level->src.h;
+    mtv = sat_bulk(&cam, level->cam_hitboxes, level->cam_nb_hitboxes);
+    level->src.x += mtv.x;
+    level->src.y += mtv.y;
+    mtv.x = -mtv.x;
+    mtv.y = -mtv.y;
+    return mtv;
 }
 
 void display_Level(Level *level, SDL_Renderer *renderer)
 {
-    if (level->texture != NULL)
-    {
-        SDL_RenderCopy(renderer, level->texture, &level->src, NULL);
-    }
+    render_Texture(renderer, level->texture, &level->src, NULL);
 }

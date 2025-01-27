@@ -31,3 +31,11 @@ SDL_Texture *loadImage(const char chemin[], SDL_Renderer *renderer)
     SDL_SetTextureBlendMode(texture, SDL_BLENDMODE_BLEND);
     return texture;
 }
+
+void render_Texture(SDL_Renderer *renderer, SDL_Texture *texture, SDL_Rect *src, SDL_Rect *dst)
+{
+    if (NULL != texture)
+    {
+        SDL_RenderCopy(renderer, texture, src, dst);
+    }
+}

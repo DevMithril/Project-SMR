@@ -22,45 +22,30 @@ void load_Player(Player *player, SDL_Renderer *renderer)
 
 void destroy_Player(Player *player)
 {
-    return;
+    if (player->texture != NULL)
+    {
+        SDL_DestroyTexture(player->texture);
+    }
 }
 
 void move_Player(int x, int y, Player *player, Level *level)
 {
-    SDL_bool osef, move_x, move_y, mid_x = (player->dst.x + player->dst.w / 2 == 160), mid_y = (player->dst.y + player->dst.h / 2 == 120);
-    Vector2 mtv = {.x = 0, .y = 0};
     move_Hitbox(x, y, &player->hitbox);
-    mtv = collision_Level(&player->hitbox, level);
+    Vector2 mtv = sat_bulk(&player->hitbox, level->hitboxes, level->nb_hitboxes);
     if (mtv.x != 0 || mtv.y != 0)
     {
         move_Hitbox(mtv.x, mtv.y, &player->hitbox);
-        x += mtv.x;
-        y += mtv.y;
     }
-    if (mid_x)
-    {
-        move_cam_Level(x, 0, &move_x, &osef, level);
-    }
-    if (mid_y)
-    {
-        move_cam_Level(0, y, &osef, &move_y, level);
-    }
-    if (!mid_x || !move_x)
-    {
-        player->dst.x += x;
-    }
-    if (!mid_y || !move_y)
-    {
-        player->dst.y += y;
-    }
+    int mid_x = (player->hitbox.points[0].x + player->hitbox.points[1].x) / 2;
+    int mid_y = (player->hitbox.points[0].y + player->hitbox.points[3].y) / 2;
+    mtv = move_cam_Level(-level->src.x + mid_x -level->src.w / 2, -level->src.y + mid_y -level->src.h / 2, level);
+    player->dst.x = mtv.x + level->src.w / 2 -player->dst.w / 2;
+    player->dst.y = mtv.y + level->src.h / 2 -player->dst.h / 2;
 }
 
 void display_Player(Player *player, SDL_Renderer *renderer)
 {
-    if (player->texture != NULL)
-    {
-        SDL_RenderCopy(renderer, player->texture, &player->src, &player->dst);
-    }
+    render_Texture(renderer, player->texture, &player->src, &player->dst);
 }
 
 void animate_Player(Player *player)
@@ -103,5 +88,5 @@ void update_Game(Player *player, Input *input, Level *level, SDL_Renderer *rende
         move_Player(0, 2, player, level);
     }
     display_Level(level, renderer);
-    display_Hitbox(&player->hitbox, - player->hitbox.points[0].x + player->dst.x, - player->hitbox.points[0].y + player->dst.y, renderer);
+    display_Hitbox(&player->hitbox, - player->hitbox.points[0].x + player->dst.x, - player->hitbox.points[0].y + player->dst.y, 255, 0, 0, renderer);
 }
