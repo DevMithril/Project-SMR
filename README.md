@@ -1,1 +1,1 @@
-Space Shooter is the only thing fully working (although it's nothing great)
+Super Metroid Remake, or SMR for short, is a fan-made remake of Super Metroid
